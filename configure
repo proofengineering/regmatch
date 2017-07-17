@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+DEPS=(Ott)
+EXTRA=(regexp.v)
+source coqproject.sh
