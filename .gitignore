@@ -8,10 +8,9 @@ Makefile.coq
 Makefile.coq.bak
 _build
 regexp.v
-regexp.ml
-regexp.mli
-checker.native
-prolog.native
+accept.ml
+accept.mli
+matcher.native
 regexp.log
 regexp.tex
 regexp.aux

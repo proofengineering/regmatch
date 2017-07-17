@@ -26,10 +26,10 @@ matcher.native: $(MLFILES) matcher.ml
 	$(OCAMLBUILD) matcher.native
 
 Makefile.coq: $(VFILES)
-	coq_makefile -f _CoqProject -o Makefile.coq -no-install
-#          -extra '$(MLFILES)' \
-#	    'accept_extrocaml.v accept.vo' \
-#	    '$$(COQC) $$(COQDEBUG) $$(COQFLAGS) accept_extrocaml.v'
+	coq_makefile -f _CoqProject -o Makefile.coq -no-install \
+          -extra '$(MLFILES)' \
+            'accept_extrocaml.v regexp_metatheory.vo' \
+            '$$(COQC) $$(COQDEBUG) $$(COQFLAGS) accept_extrocaml.v'
 
 $(VFILES): %.v: %.ott
 	$(OTT) -o $@ -coq_expand_list_types false $<
