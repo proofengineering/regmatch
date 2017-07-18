@@ -4,15 +4,11 @@ Require Export Ascii.
 Require Export String.
 
 Open Scope string_scope.
-
-Hint Resolve bool_dec : ott_coq_equality.
-Hint Resolve ascii_dec : ott_coq_equality.
 }}
 metavar a ::=
           {{ lex alphanum }}
           {{ com character }}
           {{ coq ascii }}
-          {{ coq-equality }}
 indexvar n ::=
 	 {{ lex numeral }}
 	 {{ com index variable }}
@@ -21,14 +17,13 @@ grammar
 s :: s_ ::=
   {{ com string }}
   {{ coq string }}
-  {{ coq-equality }}
   | e :: M :: empty
     {{ coq "" }}
     {{ tex \epsilon }}
   | a :: M :: char
     {{ coq (String [[a]] "") }}
   | s s' :: M :: concat_2
-    {{ coq (append [[s]] [[s']]) }}
+    {{ coq ([[s]] ++ [[s']]) }}
 
 regexp, r :: regexp_ ::=
   {{ com regexp }}
@@ -46,7 +41,6 @@ terminals :: terminals_ ::=
 
 formula :: formula_ ::=
 	| judgement :: :: judgement
-	| formula1 .. formulan :: :: dots
 
 defns
   regexp_ins :: '' ::=
