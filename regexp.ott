@@ -29,8 +29,6 @@ s :: s_ ::=
     {{ coq (String [[a]] "") }}
   | s s' :: M :: concat_2
     {{ coq (append [[s]] [[s']]) }}
-%  | s1 .. sn :: M :: concat_n
-%    {{ coq (flatten [[s1 .. sn]]) }}
 
 regexp, r :: regexp_ ::=
   {{ com regexp }}
@@ -49,11 +47,6 @@ terminals :: terminals_ ::=
 formula :: formula_ ::=
 	| judgement :: :: judgement
 	| formula1 .. formulan :: :: dots
-
-%embed
-%{{ coq
-%Definition flatten (ls : list s) : s := fold_left append ls "".
-%}}
 
 defns
   regexp_ins :: '' ::=
@@ -80,10 +73,14 @@ defn
  s' in L ( r2 )
  ------------------- :: times
  s s' in L ( r1 r2 )
- 
-% s1 in L ( r ) .. sn in L ( r )
-% ------------------------------ :: star
-% s1 .. sn in L ( r * ) 
+
+% -------------- :: star_1
+% e in L ( r * )
+%
+% s in L ( r )
+% s' in L ( r * )
+% ----------------- :: star_2
+% s s' in L ( r * )
 
 defns
   regexp_ins_c :: '' ::=
