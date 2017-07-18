@@ -126,121 +126,218 @@ apply regexp_lt_well_founded.
 Defined.
 
 Definition accept_t (rs : regexp * string) :=
-bool.
+{ s_matches_r (fst rs) (snd rs)}+{ ~ s_matches_r (fst rs) (snd rs) }.
+
+Lemma string_append_assoc : forall s0 s1 s2, s0 ++ s1 ++ s2 = (s0 ++ s1) ++ s2.
+elim => //.
+move => a s0 IH s1 s2.
+by rewrite /= IH.
+Qed.
 
 Definition accept_F : forall rs : regexp * string,
   (forall rs', accept_lt rs' rs -> accept_t rs') -> accept_t rs.
   refine
     (fun rs accept_rec =>
-       match snd rs as s0 return (_ = s0 -> _) with
-       | "" => 
+       match snd rs as s0 return _ = s0 -> _ with
+       | "" =>
          fun H_eq_s =>
-           match fst rs as r0 return (_ = r0 -> _) with
-           | regexp_zero => fun H_eq_r => false
-           | regexp_unit => fun H_eq_r => true
-           | regexp_char _ => fun H_eq_r => false
-           | regexp_plus r1 r2 => fun H_eq_r => orb (accept_rec (r1, "") _) (accept_rec (r2, "") _)
-           | regexp_times r1 r2 => fun H_eq_r => andb (accept_rec (r1, "") _) (accept_rec (r2, "") _)
+           match fst rs as r0 return _ = r0 -> _ with
+           | regexp_zero => fun H_eq_r => right _
+           | regexp_unit => fun H_eq_r => left _
+           | regexp_char _ => fun H_eq_r => right _
+           | regexp_plus r1 r2 =>
+             fun H_eq_r =>
+               match accept_rec (r1, "") _ with
+               | left H_r1 => left _
+               | right H_r1 =>
+                 match accept_rec (r2, "") _ with
+                 | left H_r2 => left _
+                 | right H_r2 => right _
+                 end
+               end
+           | regexp_times r1 r2 =>
+             fun H_eq_r =>
+               match accept_rec (r1, "") _ with
+               | left H_r1 =>
+                 match accept_rec (r2, "") _ with
+                 | left H_r2 => left _
+                 | right H_r2 => right _
+                 end
+               | right H_r1 => right _
+               end
            end (refl_equal _)
-       | String c s' => 
+       | String c s' =>
          fun H_eq_s =>
-           match fst rs as r0 return (_ = r0 -> _) with
-           | regexp_zero => fun H_eq_r => false
-           | regexp_unit => fun H_eq_r => false
+           match fst rs as r0 return _ = r0 -> _ with
+           | regexp_zero => fun H_eq_r => right _
+           | regexp_unit => fun H_eq_r => right _
            | regexp_char c' =>
-             fun H_eq_r => 
-               match ascii_dec c c' with
-               | left H_c => true
-               | right H_c => false
+             fun H_eq_r =>
+               match s' as s1 return _ = s1 -> _ with
+               | "" =>
+                 fun H_eq_s' =>
+                   match ascii_dec c c' with
+                   | left H_c => left _
+                   | right H_c => right _
+                   end
+               | _ => fun H_eq_s' => right _ 
+               end (refl_equal _)
+           | regexp_plus r1 r2 =>
+             fun H_eq_r =>
+               match accept_rec (r1, String c s') _ with
+               | left H_r1 => left _
+               | right H_r1 =>
+                 match accept_rec (r2, String c s') _ with
+                 | left H_r2 => left _
+                 | right H_r2 => right _
+                 end
                end
-           | regexp_plus r1 r2 => fun H_eq_r => orb (accept_rec (r1, String c s') _) (accept_rec (r2, String c s') _)
-           | regexp_times regexp_unit r2 => fun H_eq_r => accept_rec (r2, String c s') _
-           | regexp_times (regexp_char c') r2 => 
-             fun H_eq_r => 
-               match ascii_dec c c' with
-               | left H_c => accept_rec (r2, s') _
-               | right H_c => false
+           | regexp_times regexp_unit r2 =>
+             fun H_eq_r =>
+               match accept_rec (r2, String c s') _ with
+               | left H_r2 => left _
+               | right H_r2 => right _
                end
-           | regexp_times (regexp_times r11 r12) r2 => fun H_eq_r => accept_rec (regexp_times r11 (regexp_times r12 r2), String c s') _
-           | regexp_times (regexp_plus r11 r12) r2 => fun H_eq_r => orb (accept_rec (regexp_times r11 r2, String c s') _) (accept_rec (regexp_times r12 r2, String c s') _)
-           | _ => fun H_eq_r => false
+           | regexp_times (regexp_char c') r2 =>
+             fun H_eq_r =>
+               match ascii_dec c c' with
+               | left H_c =>
+                 match accept_rec (r2, s') _ with
+                 | left H_r2 => left _
+                 | right H_r2 => right _
+                 end
+               | right H_c => right _
+               end
+           | regexp_times (regexp_times r11 r12) r2 =>
+             fun H_eq_r =>
+               match accept_rec (regexp_times r11 (regexp_times r12 r2), String c s') _ with
+               | left H_r => left _
+               | right H_r => right _
+               end
+           | regexp_times (regexp_plus r11 r12) r2 =>
+             fun H_eq_r =>
+               match accept_rec (regexp_times r11 r2, String c s') _ with
+               | left H_r11 => left _
+               | right H_r11 =>
+                 match accept_rec (regexp_times r12 r2, String c s') _ with
+                 | left H_r12 => left _
+                 | right H_r12 => right _
+                 end
+               end
+           | _ => fun H_eq_r => right _
            end (refl_equal _)
-       end (refl_equal _)).
-- destruct rs.
-  simpl in *.
-  subst.
-  rewrite /accept_lt /=.
+       end (refl_equal _)); destruct rs; simpl in *; subst.
+- by move => H_m; inversion H_m.
+- exact: s_matches_r_unit.
+- by move => H_m; inversion H_m.
+- rewrite /accept_lt /=.
   apply regexp_lt_lt.
   rewrite /=.
   by omega.
-- destruct rs.
-  simpl in *.
-  subst.
-  rewrite /accept_lt /=.
+- exact: s_matches_r_plus_1.
+- rewrite /accept_lt /=.
   apply regexp_lt_lt.
   rewrite /=.
   by omega.
-- destruct rs.
-  simpl in *.
-  subst.
-  rewrite /accept_lt /=.
+- exact: s_matches_r_plus_2.
+- by move => H_m; inversion H_m; subst.
+- rewrite /accept_lt /=.
   apply regexp_lt_lt.
   rewrite /=.
   by omega.
-- destruct rs.
-  simpl in *.
-  subst.
-  rewrite /accept_lt /=.
+- rewrite /accept_lt /=.
   apply regexp_lt_lt.
   rewrite /=.
   by omega.
-- destruct rs.
-  simpl in *.
-  subst.
-  rewrite /accept_lt /=.
+- exact: s_matches_r_times _ _ _ _ H_r1 H_r2.
+- move => H_m; inversion H_m; subst.
+  by destruct s1, s2.
+- move => H_m; inversion H_m; subst.
+  by destruct s1.
+- by move => H_m; inversion H_m.
+- by move => H_m; inversion H_m.
+- exact: s_matches_r_char.
+- by move => H_m; inversion H_m; subst.
+- by move => H_m; inversion H_m; subst.
+- rewrite /accept_lt /=.
   apply regexp_lt_lt.
   rewrite /=.
   by omega.
-- destruct rs.
-  simpl in *.
-  subst.
-  rewrite /accept_lt /=.
+- exact: s_matches_r_plus_1.
+- rewrite /accept_lt /=.
   apply regexp_lt_lt.
   rewrite /=.
   by omega.
-- destruct rs.
-  simpl in *.
-  subst.
-  rewrite /accept_lt /=.
+- exact: s_matches_r_plus_2.
+- by move => H_m; inversion H_m.
+- move => H_m; inversion H_m; subst.
+  by inversion H2.
+- rewrite /accept_lt /=.
   apply regexp_lt_lt.
   rewrite /=.
   by omega.
-- destruct rs.
+- have H_eq: append "" (String c s') = String c s' by [].
+  rewrite -H_eq.
+  apply s_matches_r_times => //.
+  exact: s_matches_r_unit.
+- move => H_s.
+  inversion H_s; subst.
+  inversion H2; subst.
   simpl in *.
   subst.
-  rewrite /accept_lt /=.
+  by contradict H_r2.
+- rewrite /accept_lt /=.
   apply regexp_lt_lt.
   rewrite /=.
   by omega.
-- destruct rs.
-  simpl in *.
-  subst.
-  rewrite /accept_lt /=.
+- have H_eq: append (String c' "") s' = String c' s' by [].
+  rewrite -H_eq.
+  apply s_matches_r_times => //.
+  exact: s_matches_r_char.
+- move => H_m; inversion H_m; subst.
+  inversion H2; subst.
+  injection H1 => H_eq.
+  by subst.
+- move => H_m; inversion H_m; subst.
+  inversion H2; subst.
+  injection H1 => H_eq H_eq'.
+  by subst.
+- rewrite /accept_lt /=.
   apply regexp_lt_lt.
   rewrite /=.
   by omega.
-- destruct rs.
-  simpl in *.
-  subst.
-  rewrite /accept_lt /=.
+- inversion H_r11; subst.
+  apply s_matches_r_times => //.
+  exact: s_matches_r_plus_1.
+- rewrite /accept_lt /=.
   apply regexp_lt_lt.
   rewrite /=.
   by omega.
-- destruct rs.
-  simpl in *.
-  subst.
-  rewrite /accept_lt /=.
-  by apply regexp_lt_times_lt; rewrite /=; omega.
+- inversion H_r12; subst.
+  apply s_matches_r_times => //.
+  exact: s_matches_r_plus_2.
+- move => H_m; inversion H_m; subst.
+  inversion H2; subst.
+  * contradict H_r11.
+    rewrite -H1.
+    exact: s_matches_r_times.
+  * contradict H_r12.
+    rewrite -H1.
+    exact: s_matches_r_times.
+- rewrite /accept_lt /=.
+  by apply regexp_lt_times_lt => /=; omega.
+- inversion H_r; subst.
+  inversion H3; subst.
+  rewrite string_append_assoc.
+  apply s_matches_r_times => //.
+  exact: s_matches_r_times.
+- move => H_s; inversion H_s; subst.
+  inversion H2; subst.
+  contradict H_r.
+  rewrite -string_append_assoc in H1.
+  rewrite -H1.
+  apply s_matches_r_times => //.
+  exact: s_matches_r_times.
 Defined.
 
 Definition accept : forall (rs : regexp * string), accept_t rs :=

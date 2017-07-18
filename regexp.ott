@@ -23,12 +23,14 @@ s :: s_ ::=
   {{ coq string }}
   {{ coq-equality }}
   | e :: M :: empty
-    {{ coq EmptyString }}
+    {{ coq "" }}
     {{ tex \epsilon }}
   | a :: M :: char
-    {{ coq (String [[a]] EmptyString) }}
-  | s1 .. sn :: M :: concat
-    {{ coq (flatten [[s1 .. sn]]) }}
+    {{ coq (String [[a]] "") }}
+  | s s' :: M :: concat_2
+    {{ coq (append [[s]] [[s']]) }}
+%  | s1 .. sn :: M :: concat_n
+%    {{ coq (flatten [[s1 .. sn]]) }}
 
 regexp, r :: regexp_ ::=
   {{ com regexp }}
@@ -48,10 +50,10 @@ formula :: formula_ ::=
 	| judgement :: :: judgement
 	| formula1 .. formulan :: :: dots
 
-embed
-{{ coq
-Definition flatten (ls : list s) : s := fold_left append ls EmptyString.
-}}
+%embed
+%{{ coq
+%Definition flatten (ls : list s) : s := fold_left append ls "".
+%}}
 
 defns
   regexp_ins :: '' ::=
@@ -117,7 +119,7 @@ defn
     
   r1 ! s1
   r2 ! s2
-  --------------- :: times
+  ------------- :: times
   r1 r2 ! s1 s2
 
  % ------- :: star_1
