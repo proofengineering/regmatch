@@ -32,8 +32,8 @@ regexp, r :: regexp_ ::=
   | a :: :: char
   | r + r' :: :: plus
   | r r' :: :: times
-%  | r * :: :: star 
-%    {{ tex [[r]]^* }}
+  | r * :: :: star
+    {{ tex [[r]]^* }}
 
 terminals :: terminals_ ::=
 	  | in :: :: in {{ tex \in }}
@@ -68,13 +68,13 @@ defn
  ------------------- :: times
  s s' in L ( r1 r2 )
 
-% -------------- :: star_1
-% e in L ( r * )
-%
-% s in L ( r )
-% s' in L ( r * )
-% ----------------- :: star_2
-% s s' in L ( r * )
+ -------------- :: star_1
+ e in L ( r * )
+
+ s in L ( r )
+ s' in L ( r * )
+ ----------------- :: star_2
+ s s' in L ( r * )
 
 defns
   regexp_ins_c :: '' ::=
@@ -113,10 +113,10 @@ defn
   ------------- :: times
   r1 r2 ! s1 s2
 
- % ------- :: star_1
- % r * ! e
- % 
- % r ! s1
- % r * ! s2
- % ----------- :: star_2
- % r * ! s1 s2
+  ------- :: star_1
+  r * ! e
+
+  r ! s1
+  r * ! s2
+  ----------- :: star_2
+  r * ! s1 s2

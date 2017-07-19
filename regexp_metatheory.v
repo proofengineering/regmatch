@@ -13,6 +13,12 @@ Require Import Omega.
 Import ListNotations.
 Open Scope string_scope.
 
+Lemma string_append_assoc : forall s0 s1 s2, s0 ++ s1 ++ s2 = (s0 ++ s1) ++ s2.
+elim => //.
+move => a s0 IH s1 s2.
+by rewrite /= IH.
+Qed.
+
 Fixpoint regexp_size (r : regexp) : nat :=
 match r with
 | regexp_zero => 1
@@ -20,6 +26,7 @@ match r with
 | regexp_char _ => 1
 | regexp_plus r1 r2 => regexp_size r1 + regexp_size r2 + 1
 | regexp_times r1 r2 => regexp_size r1 + regexp_size r2 + 1
+| regexp_star r => regexp_size r + 1
 end.
 
 Definition regexp_size_lt (r r' : regexp) := regexp_size r < regexp_size r'.
@@ -31,11 +38,8 @@ Defined.
 
 Fixpoint regexp_subsize (r : regexp) : nat :=
 match r with
-| regexp_zero => 0
-| regexp_unit => 0
-| regexp_char _ => 0
-| regexp_plus r1 r2 => 0
 | regexp_times r1 r2 => regexp_size r1
+| _ => 0
 end.
 
 Definition regexp_subsize_lt (r r' : regexp) := regexp_subsize r < regexp_subsize r'.
@@ -117,6 +121,80 @@ apply (wf_incl _ _ _ regexp_lt_size_subsize_symprod_incl).
 exact: regexp_lt_size_subsize_lexprod'_wf.
 Defined.
 
+Definition regexps_no_c_lt (rc rc' : regexp * ascii) := regexp_lt (fst rc) (fst rc').
+
+Lemma regexps_no_c_lt_well_founded : well_founded regexps_no_c_lt.
+Proof.
+apply (wf_inverse_image _ _ _ (fun rs => fst rs)).
+apply regexp_lt_well_founded.
+Defined.
+
+Definition regexps_no_c_t (rc : regexp * a) :=
+list regexp.
+(*{ l : list regexp | forall r, In r l -> (forall s, s_in_regexp_lang s r -> s_in_regexp_c_lang s (fst rc) (snd rc)) }.*)
+
+Definition regexps_no_c_F : forall rc : regexp * a,
+  (forall rc', regexps_no_c_lt rc' rc -> regexps_no_c_t rc') -> regexps_no_c_t rc.
+refine
+  (fun rc regexps_no_c_rec =>
+     match fst rc as r0 return _ = r0 -> _ with
+     | regexp_zero => fun H_eq => []
+     | regexp_unit => fun H_eq => []
+     | regexp_char c =>
+       fun H_eq =>
+         match ascii_dec c (snd rc) with
+         | left H_a => [regexp_unit]
+         | right H_a => []
+         end
+     | regexp_plus r1 r2 => 
+       fun H_eq =>
+         app (regexps_no_c_rec (r1, snd rc) _) (regexps_no_c_rec (r2, snd rc) _)
+     | regexp_star r =>
+       fun H_eq =>
+         fold_left (fun l r' => regexp_times r' (regexp_star r) :: l) (regexps_no_c_rec (r, snd rc) _) []
+     | regexp_times regexp_zero _ => fun H_eq => []
+     | regexp_times regexp_unit r2 => fun H_eq => regexps_no_c_rec (r2, snd rc) _
+     | regexp_times (regexp_char c) r2 =>
+       fun H_eq =>
+         match ascii_dec c (snd rc) with
+         | left H_a => [r2]
+         | right H_a => []
+         end
+     | regexp_times (regexp_plus r11 r12) r2 =>
+       fun H_eq =>
+         app (regexps_no_c_rec (regexp_times r11 r2, snd rc) _) (regexps_no_c_rec (regexp_times r12 r2, snd rc) _)
+     | regexp_times (regexp_times r11 r12) r2 =>
+       fun H_eq =>
+         regexps_no_c_rec (regexp_times r11 (regexp_times r12 r2), snd rc) _
+     | regexp_times (regexp_star r1) r2 =>
+       fun H_eq =>
+         app 
+           (regexps_no_c_rec (r2, snd rc) _) 
+           (fold_left (fun l r' => regexp_times r' (regexp_times (regexp_star r1) r2) :: l) (regexps_no_c_rec (r1, snd rc) _) [])
+     end (refl_equal _)); destruct rc; simpl in *; subst.
+- rewrite /regexps_no_c_lt /=.
+  by apply regexp_lt_lt => /=; omega.
+- rewrite /regexps_no_c_lt /=.
+  by apply regexp_lt_lt => /=; omega.
+- rewrite /regexps_no_c_lt /=.
+  by apply regexp_lt_lt => /=; omega.
+- rewrite /regexps_no_c_lt /=.
+  by apply regexp_lt_lt => /=; omega.
+- rewrite /regexps_no_c_lt /=.
+  by apply regexp_lt_lt => /=; omega.
+- rewrite /regexps_no_c_lt /=.
+  by apply regexp_lt_times_lt => /=; omega.
+- rewrite /regexps_no_c_lt /=.
+  by apply regexp_lt_lt => /=; omega.
+- rewrite /regexps_no_c_lt /=.
+  by apply regexp_lt_lt => /=; omega.
+- rewrite /regexps_no_c_lt /=.
+  by apply regexp_lt_lt => /=; omega.
+Defined.
+
+Definition regexps_no_c : forall (rs : regexp * a), regexps_no_c_t rs :=
+@well_founded_induction _ _ regexps_no_c_lt_well_founded regexps_no_c_t regexps_no_c_F.
+
 Definition accept_lt (rs rs' : regexp * string) := regexp_lt (fst rs) (fst rs').
 
 Lemma accept_lt_well_founded : well_founded accept_lt.
@@ -127,12 +205,6 @@ Defined.
 
 Definition accept_t (rs : regexp * string) :=
 { s_matches_r (fst rs) (snd rs)}+{ ~ s_matches_r (fst rs) (snd rs) }.
-
-Lemma string_append_assoc : forall s0 s1 s2, s0 ++ s1 ++ s2 = (s0 ++ s1) ++ s2.
-elim => //.
-move => a s0 IH s1 s2.
-by rewrite /= IH.
-Qed.
 
 Definition accept_F : forall rs : regexp * string,
   (forall rs', accept_lt rs' rs -> accept_t rs') -> accept_t rs.
