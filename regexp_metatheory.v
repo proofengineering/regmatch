@@ -130,66 +130,213 @@ apply regexp_lt_well_founded.
 Defined.
 
 Definition regexps_no_c_t (rc : regexp * a) :=
-list regexp.
-(*{ l : list regexp | forall r, In r l -> (forall s, s_in_regexp_lang s r -> s_in_regexp_c_lang s (fst rc) (snd rc)) }.*)
+{ l : list regexp | forall r, In r l -> (forall s, s_in_regexp_lang s r -> s_in_regexp_c_lang s (fst rc) (snd rc)) }.
+
+Section FoldLeftFun.
+
+Variable A : Type.
+
+Variable f : A -> A.
+
+Lemma fold_left_f_list_app :
+  forall l1 l0,
+    fold_left (fun (l : list A) (a : A) => f a :: l) l1 l0 =
+    app (fold_left (fun (l : list A) (a : A) => f a :: l) l1 []) l0.
+Proof.
+elim => //=.
+move => a l IH l'.
+rewrite IH /=.
+have IH' := IH [f a].
+rewrite IH' /=.
+set fl := fold_left _ _ _.
+by rewrite -app_assoc app_assoc.
+Qed.
+
+Lemma fold_left_list_f_in : 
+  forall l1 a,
+    In a (fold_left (fun (l : list A) (a' : A) => f a' :: l) l1 []) ->
+    exists a0, In a0 l1 /\ a = f a0.
+Proof.
+elim => //=.
+move => a l IH a' H_in.
+rewrite fold_left_f_list_app in H_in.
+apply in_app_or in H_in.
+case: H_in => H_in.
+* have [a0 [H_in' H_eq]] := IH _ H_in.
+  subst.
+  exists a0.
+  split => //.
+  by right.
+* case: H_in => H_eq //.
+  exists a.
+  split => //.
+  by left.
+Qed.
+
+End FoldLeftFun.
 
 Definition regexps_no_c_F : forall rc : regexp * a,
   (forall rc', regexps_no_c_lt rc' rc -> regexps_no_c_t rc') -> regexps_no_c_t rc.
 refine
   (fun rc regexps_no_c_rec =>
      match fst rc as r0 return _ = r0 -> _ with
-     | regexp_zero => fun H_eq => []
-     | regexp_unit => fun H_eq => []
+     | regexp_zero => fun H_eq => exist _ [] _
+     | regexp_unit => fun H_eq => exist _ [] _
      | regexp_char c =>
        fun H_eq =>
          match ascii_dec c (snd rc) with
-         | left H_a => [regexp_unit]
-         | right H_a => []
+         | left H_a => exist _ [regexp_unit] _
+         | right H_a => exist _ [] _
          end
      | regexp_plus r1 r2 => 
        fun H_eq =>
-         app (regexps_no_c_rec (r1, snd rc) _) (regexps_no_c_rec (r2, snd rc) _)
+         match regexps_no_c_rec (r1, snd rc) _, regexps_no_c_rec (r2, snd rc) _ with
+         | exist l1 H_ex1, exist l2 H_ex2 => exist _ (app l1 l2) _
+         end
      | regexp_star r =>
        fun H_eq =>
-         fold_left (fun l r' => regexp_times r' (regexp_star r) :: l) (regexps_no_c_rec (r, snd rc) _) []
-     | regexp_times regexp_zero _ => fun H_eq => []
-     | regexp_times regexp_unit r2 => fun H_eq => regexps_no_c_rec (r2, snd rc) _
+         match regexps_no_c_rec (r, snd rc) _ with
+         | exist l H_ex =>
+           exist _ (fold_left (fun l' r' => regexp_times r' (regexp_star r) :: l') l []) _
+         end
+     | regexp_times regexp_zero _ => fun H_eq => exist _ [] _
+     | regexp_times regexp_unit r2 =>
+       fun H_eq =>
+         match regexps_no_c_rec (r2, snd rc) _ with
+         | exist l H_ex => exist _ l _
+         end
      | regexp_times (regexp_char c) r2 =>
        fun H_eq =>
          match ascii_dec c (snd rc) with
-         | left H_a => [r2]
-         | right H_a => []
+         | left H_a => exist _ [r2] _
+         | right H_a => exist _ [] _
          end
      | regexp_times (regexp_plus r11 r12) r2 =>
        fun H_eq =>
-         app (regexps_no_c_rec (regexp_times r11 r2, snd rc) _) (regexps_no_c_rec (regexp_times r12 r2, snd rc) _)
+         match regexps_no_c_rec (regexp_times r11 r2, snd rc) _, regexps_no_c_rec (regexp_times r12 r2, snd rc) _ with
+         | exist l11 H_ex11, exist l12 H_ex12 => exist _ (app l11 l12) _
+         end
      | regexp_times (regexp_times r11 r12) r2 =>
        fun H_eq =>
-         regexps_no_c_rec (regexp_times r11 (regexp_times r12 r2), snd rc) _
+         match regexps_no_c_rec (regexp_times r11 (regexp_times r12 r2), snd rc) _ with
+         | exist l H_ex => exist _ l _
+         end
      | regexp_times (regexp_star r1) r2 =>
        fun H_eq =>
-         app 
-           (regexps_no_c_rec (r2, snd rc) _) 
-           (fold_left (fun l r' => regexp_times r' (regexp_times (regexp_star r1) r2) :: l) (regexps_no_c_rec (r1, snd rc) _) [])
-     end (refl_equal _)); destruct rc; simpl in *; subst.
+         match regexps_no_c_rec (r2, snd rc) _, regexps_no_c_rec (r1, snd rc) _ with
+         | exist l2 H_ex2, exist l1 H_ex1 =>
+           exist _ (app l2 (fold_left (fun l r' => regexp_times r' (regexp_times (regexp_star r1) r2) :: l) l1 [])) _
+         end
+     end (refl_equal _)); destruct rc; simpl in *; subst => //=.
+- move => r; case => //.
+  move => H_eq; subst.
+  move => s H_in.
+  inversion H_in; subst.
+  apply: s_in_regexp_c_lang_cs.
+  rewrite /=.
+  exact: s_in_regexp_lang_char.
 - rewrite /regexps_no_c_lt /=.
   by apply regexp_lt_lt => /=; omega.
 - rewrite /regexps_no_c_lt /=.
   by apply regexp_lt_lt => /=; omega.
+- move => r H_in s H_s.
+  apply: s_in_regexp_c_lang_cs => /=.
+  apply in_app_or in H_in.
+  case: H_in => H_in.
+  * have H_s' := H_ex1 _ H_in _ H_s.
+    inversion H_s'; subst.
+    simpl in *.
+    exact: s_in_regexp_lang_plus_1.
+  * have H_s' := H_ex2 _ H_in _ H_s.
+    inversion H_s'; subst.
+    simpl in *.
+    exact: s_in_regexp_lang_plus_2.
+- rewrite /regexps_no_c_lt /=.
+  by apply regexp_lt_lt => /=; omega.
+- move => r' H_in s H_s.
+  apply: s_in_regexp_c_lang_cs => /=.
+  have H_s' := H_ex _ H_in _ H_s.
+  inversion H_s'; subst.
+  simpl in *.
+  have ->: String a s = "" ++ String a s by [].
+  apply s_in_regexp_lang_times => //.
+  exact: s_in_regexp_lang_unit.
+- move => r'; case => // H_eq; subst.
+  move => s H_s.
+  apply: s_in_regexp_c_lang_cs => /=.
+  have ->: String a s = String a "" ++ s by [].
+  apply s_in_regexp_lang_times => //.
+  exact: s_in_regexp_lang_char.
 - rewrite /regexps_no_c_lt /=.
   by apply regexp_lt_lt => /=; omega.
 - rewrite /regexps_no_c_lt /=.
   by apply regexp_lt_lt => /=; omega.
-- rewrite /regexps_no_c_lt /=.
-  by apply regexp_lt_lt => /=; omega.
+- move => r' H_in s H_s.
+  apply: s_in_regexp_c_lang_cs => /=.
+  apply in_app_or in H_in.
+  case: H_in => H_in.
+  * have H_s' := H_ex11 _ H_in _ H_s.
+    inversion H_s'; subst.
+    simpl in *.
+    inversion H; subst.
+    apply s_in_regexp_lang_times => //.
+    exact: s_in_regexp_lang_plus_1.
+  * have H_s' := H_ex12 _ H_in _ H_s.
+    inversion H_s'; subst.
+    simpl in *.
+    inversion H; subst.
+    apply s_in_regexp_lang_times => //.
+    exact: s_in_regexp_lang_plus_2.
 - rewrite /regexps_no_c_lt /=.
   by apply regexp_lt_times_lt => /=; omega.
+- move => r' H_in s' H_s.
+  apply: s_in_regexp_c_lang_cs => /=.
+  have H_s' := H_ex _ H_in _ H_s.
+  inversion H_s'; subst.
+  simpl in *.
+  inversion H; subst.
+  inversion H4; subst.
+  rewrite string_append_assoc. 
+  apply s_in_regexp_lang_times => //.
+  exact: s_in_regexp_lang_times.
 - rewrite /regexps_no_c_lt /=.
   by apply regexp_lt_lt => /=; omega.
 - rewrite /regexps_no_c_lt /=.
   by apply regexp_lt_lt => /=; omega.
+- move => r' H_in s' H_s'.
+  apply: s_in_regexp_c_lang_cs => /=.
+  apply in_app_or in H_in.
+  case: H_in => H_in.
+  * have H_s0 := H_ex2 _ H_in _ H_s'.
+    inversion H_s0; subst.
+    simpl in *.
+    have ->: String a s' = "" ++ String a s' by [].    
+    apply s_in_regexp_lang_times => //.
+    exact: s_in_regexp_lang_star_1.
+  * apply fold_left_list_f_in in H_in.
+    move: H_in => [r0 [H_in' H_eq_r0]].
+    subst.
+    inversion H_s'; subst.
+    have H_s0 := H_ex1 _ H_in' _ H2.
+    inversion_clear H3; subst.
+    inversion_clear H_s0; subst.
+    simpl in *.
+    have ->: String a (s5 ++ s0 ++ s') = (String a s5 ++ s0) ++ s' by rewrite -string_append_assoc.      
+    apply s_in_regexp_lang_times => //.
+    exact: s_in_regexp_lang_star_2.
 - rewrite /regexps_no_c_lt /=.
   by apply regexp_lt_lt => /=; omega.
+- move => r' H_in s' H_s'.
+  apply: s_in_regexp_c_lang_cs => /=.
+  apply fold_left_list_f_in in H_in.
+  move: H_in => [r0 [H_in' H_eq_r0]].
+  subst.
+  inversion_clear H_s'; subst.
+  have H_ex' := H_ex _ H_in' _ H.
+  inversion_clear H_ex'; subst.
+  simpl in *.
+  have ->: String a (s5 ++ s'0) = (String a s5) ++ s'0 by [].
+  exact: s_in_regexp_lang_star_2.
 Defined.
 
 Definition regexps_no_c : forall (rs : regexp * a), regexps_no_c_t rs :=
