@@ -87,36 +87,36 @@ defn
  ----------------- :: cs
  s in L ( r ; a )  
 
-defns
-  regexp_spec :: '' ::=
-
-defn 
-  r ! s :: :: s_matches_r :: s_matches_r_
-  {{ com string matches regexp }} by
- 
-  ----- :: unit
-  1 ! e
-
-  ----- :: char
-  a ! a
-
-  r1 ! s
-  ----------- :: plus_1
-  r1 + r2 ! s
-
-  r2 ! s
-  ----------- :: plus_2
-  r1 + r2 ! s
-    
-  r1 ! s1
-  r2 ! s2
-  ------------- :: times
-  r1 r2 ! s1 s2
-
-  ------- :: star_1
-  r * ! e
-
-  r ! s1
-  r * ! s2
-  ----------- :: star_2
-  r * ! s1 s2
+%defns
+%  regexp_spec :: '' ::=
+%
+%defn 
+%  r ! s :: :: s_matches_r :: s_matches_r_
+%  {{ com string matches regexp }} by
+% 
+%  ----- :: unit
+%  1 ! e
+%
+%  ----- :: char
+%  a ! a
+%
+%  r1 ! s
+%  ----------- :: plus_1
+%  r1 + r2 ! s
+%
+%  r2 ! s
+%  ----------- :: plus_2
+%  r1 + r2 ! s
+%    
+%  r1 ! s1
+%  r2 ! s2
+%  ------------- :: times
+%  r1 r2 ! s1 s2
+%
+%  ------- :: star_1
+%  r * ! e
+%
+%  r ! s1
+%  r * ! s2
+%  ----------- :: star_2
+%  r * ! s1 s2

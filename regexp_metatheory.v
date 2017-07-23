@@ -132,7 +132,7 @@ apply regexp_lt_well_founded.
 Defined.
 
 Definition regexps_no_c_t (rc : regexp * a) :=
-{ l : list regexp | forall r, In r l -> (forall s, s_in_regexp_lang s r -> s_in_regexp_c_lang s (fst rc) (snd rc)) }.
+{ l : list regexp | (forall r, In r l -> (forall s, s_in_regexp_lang s r -> s_in_regexp_c_lang s (fst rc) (snd rc))) /\ (forall s, s_in_regexp_c_lang s (fst rc) (snd rc) -> exists r, In r l /\ s_in_regexp_lang s r) }.
 
 Section FoldLeftFun.
 
@@ -226,6 +226,52 @@ Defined.
 
 End PListDec.
 
+Lemma star_times : 
+  forall s' c r',
+  s_in_regexp_lang (String c s') (regexp_star r') ->
+  s_in_regexp_lang (String c s') (regexp_times r' (regexp_star r')).
+Proof.
+case => //=.
+- move => c r' H_s.
+  inversion H_s; subst.
+  destruct s5.
+    simpl in *.
+    have ->: s' = "" ++ s' by [].
+    by apply s_in_regexp_lang_times.
+  injection H => H_eq H_eq_c; subst.
+  destruct s5 => //=.
+  have ->: String c s' = String c "" ++ s' by [].
+  by apply s_in_regexp_lang_times.
+- move => c s' c' r' H_r'.
+  inversion H_r'; subst.
+  destruct s5.
+  * simpl in *.
+    have ->: s'0 = "" ++ s'0 by [].
+    by apply s_in_regexp_lang_times.
+  * injection H => H_eq H_eq_c.
+    subst.
+    by apply s_in_regexp_lang_times.
+Qed.
+
+
+Lemma no_regexp_star_zero :
+forall s' c, ~ s_in_regexp_lang (String c s') (regexp_star regexp_zero).
+Proof.
+move => s' c H_s.
+apply star_times in H_s.
+inversion H_s; subst.
+by inversion H2.
+Qed.
+
+Lemma regexp_star_ex : forall r' s' c,
+  s_in_regexp_lang (String c s') (regexp_star r') ->
+  exists s1 s2, s' = s1 ++ s2 /\ s_in_regexp_lang (String c s1) r' /\ s_in_regexp_lang s2 (regexp_star r').
+Proof.
+elim => //=.
+- move => s' c H_s.
+  inversion H_s; subst.
+Admitted.
+
 Definition regexps_no_c_F : forall rc : regexp * a,
   (forall rc', regexps_no_c_lt rc' rc -> regexps_no_c_t rc') -> regexps_no_c_t rc.
 refine
@@ -279,115 +325,360 @@ refine
            exist _ (app l2 (fold_left (fun l r' => regexp_times r' (regexp_times (regexp_star r1) r2) :: l) l1 [])) _
          end
      end (refl_equal _)); destruct rc; simpl in *; subst => //=.
-- move => r; case => //.
-  move => H_eq; subst.
-  move => s H_in.
-  inversion H_in; subst.
-  apply: s_in_regexp_c_lang_cs.
-  rewrite /=.
-  exact: s_in_regexp_lang_char.
-- rewrite /regexps_no_c_lt /=.
-  by apply regexp_lt_lt => /=; omega.
-- rewrite /regexps_no_c_lt /=.
-  by apply regexp_lt_lt => /=; omega.
-- move => r H_in s H_s.
-  apply: s_in_regexp_c_lang_cs => /=.
-  apply in_app_or in H_in.
-  case: H_in => H_in.
-  * have H_s' := H_ex1 _ H_in _ H_s.
-    inversion H_s'; subst.
-    simpl in *.
-    exact: s_in_regexp_lang_plus_1.
-  * have H_s' := H_ex2 _ H_in _ H_s.
-    inversion H_s'; subst.
-    simpl in *.
-    exact: s_in_regexp_lang_plus_2.
-- rewrite /regexps_no_c_lt /=.
-  by apply regexp_lt_lt => /=; omega.
-- move => r' H_in s H_s.
-  apply: s_in_regexp_c_lang_cs => /=.
-  have H_s' := H_ex _ H_in _ H_s.
-  inversion H_s'; subst.
-  simpl in *.
-  have ->: String a s = "" ++ String a s by [].
-  apply s_in_regexp_lang_times => //.
-  exact: s_in_regexp_lang_unit.
-- move => r'; case => // H_eq; subst.
+- split => //.
   move => s H_s.
-  apply: s_in_regexp_c_lang_cs => /=.
-  have ->: String a s = String a "" ++ s by [].
-  apply s_in_regexp_lang_times => //.
-  exact: s_in_regexp_lang_char.
+  inversion H_s; subst.
+  by inversion H.
+- split => //.
+  move => s H_s.
+  inversion H_s; subst.
+  simpl in *.
+  by inversion H.
+- split.
+  * move => r; case => //.
+    move => H_eq; subst.
+    move => s H_in.
+    inversion H_in; subst.
+    apply: s_in_regexp_c_lang_cs.
+    rewrite /=.
+    exact: s_in_regexp_lang_char.
+  * move => s' H_s.
+    inversion H_s; subst.
+    simpl in *.
+    inversion H; subst.
+    exists regexp_unit.
+    split; first by left.
+    exact s_in_regexp_lang_unit.
+- split => //=.
+  move => s' H_s.
+  inversion H_s; subst.
+  simpl in *.
+  by inversion H; subst.
 - rewrite /regexps_no_c_lt /=.
   by apply regexp_lt_lt => /=; omega.
 - rewrite /regexps_no_c_lt /=.
   by apply regexp_lt_lt => /=; omega.
-- move => r' H_in s H_s.
-  apply: s_in_regexp_c_lang_cs => /=.
-  apply in_app_or in H_in.
-  case: H_in => H_in.
-  * have H_s' := H_ex11 _ H_in _ H_s.
+- move: H_ex1 => [H_ex1 H_ex1'].
+  move: H_ex2 => [H_ex2 H_ex2'].
+  split.
+  * move => r H_in s H_s.
+    apply: s_in_regexp_c_lang_cs => /=.
+    apply in_app_or in H_in.
+    case: H_in => H_in.
+    + have H_s' := H_ex1 _ H_in _ H_s.
+      inversion H_s'; subst.
+      simpl in *.
+      exact: s_in_regexp_lang_plus_1.
+    + have H_s' := H_ex2 _ H_in _ H_s.
+      inversion H_s'; subst.
+      simpl in *.
+      exact: s_in_regexp_lang_plus_2.
+  * move => s' H_s'.
     inversion H_s'; subst.
     simpl in *.
     inversion H; subst.
-    apply s_in_regexp_lang_times => //.
-    exact: s_in_regexp_lang_plus_1.
-  * have H_s' := H_ex12 _ H_in _ H_s.
-    inversion H_s'; subst.
-    simpl in *.
-    inversion H; subst.
-    apply s_in_regexp_lang_times => //.
-    exact: s_in_regexp_lang_plus_2.
-- rewrite /regexps_no_c_lt /=.
-  by apply regexp_lt_times_lt => /=; omega.
-- move => r' H_in s' H_s.
-  apply: s_in_regexp_c_lang_cs => /=.
-  have H_s' := H_ex _ H_in _ H_s.
-  inversion H_s'; subst.
+    * apply s_in_regexp_c_lang_cs in H2.
+      have [r [H_in H_ex1'']] := H_ex1' _ H2.
+      exists r. split => //.
+      by apply in_or_app; left.
+    * apply s_in_regexp_c_lang_cs in H2.
+      have [r [H_in H_ex2'']] := H_ex2' _ H2.
+      exists r. split => //.
+      by apply in_or_app; right.
+- split => //.
+  move => s H_s.
+  inversion H_s; subst.
   simpl in *.
   inversion H; subst.
-  inversion H4; subst.
-  rewrite string_append_assoc. 
-  apply s_in_regexp_lang_times => //.
-  exact: s_in_regexp_lang_times.
+  by inversion H3.
 - rewrite /regexps_no_c_lt /=.
   by apply regexp_lt_lt => /=; omega.
-- rewrite /regexps_no_c_lt /=.
-  by apply regexp_lt_lt => /=; omega.
-- move => r' H_in s' H_s'.
-  apply: s_in_regexp_c_lang_cs => /=.
-  apply in_app_or in H_in.
-  case: H_in => H_in.
-  * have H_s0 := H_ex2 _ H_in _ H_s'.
-    inversion H_s0; subst.
+- move: H_ex => [H_ex H_ex'].
+  split.
+  * move => r' H_in s H_s.
+    apply: s_in_regexp_c_lang_cs => /=.
+    have H_s' := H_ex _ H_in _ H_s.
+    inversion H_s'; subst.
     simpl in *.
-    have ->: String a s' = "" ++ String a s' by [].    
+    have ->: String a s = "" ++ String a s by [].
     apply s_in_regexp_lang_times => //.
-    exact: s_in_regexp_lang_star_1.
-  * apply fold_left_list_f_in in H_in.
+    exact: s_in_regexp_lang_unit.
+  * move => s' H_s'.
+    inversion H_s'; subst.
+    simpl in *.
+    inversion H; subst.
+    inversion H3; subst.
+    simpl in *.
+    subst.
+    apply s_in_regexp_c_lang_cs in H4.
+    apply H_ex' in H4.
+    move: H4 => [r0 [H_in H_s0]].
+    by exists r0.
+- split.
+  * move => r'; case => // H_eq; subst.
+    move => s H_s.
+    apply: s_in_regexp_c_lang_cs => /=.
+    have ->: String a s = String a "" ++ s by [].
+    apply s_in_regexp_lang_times => //.
+    exact: s_in_regexp_lang_char.
+  * move => s H_s.
+    inversion H_s; subst.
+    simpl in *.
+    inversion H; subst.
+    inversion H3; subst.
+    simpl in *.
+    injection H0 => H_eq.
+    subst.
+    exists r2.
+    by split; first by left.
+- split => //.
+  move => s H_s.
+  inversion H_s; subst.
+  simpl in *.
+  inversion H; subst.
+  inversion H3; subst.
+  simpl in *.
+  by injection H0.
+- rewrite /regexps_no_c_lt /=.
+  by apply regexp_lt_lt => /=; omega.
+- rewrite /regexps_no_c_lt /=.
+  by apply regexp_lt_lt => /=; omega.
+- move: H_ex11 => [H_ex11 H_ex11'].
+  move: H_ex12 => [H_ex12 H_ex12'].
+  split.  
+  * move => r' H_in s H_s.
+    apply: s_in_regexp_c_lang_cs => /=.
+    apply in_app_or in H_in.
+    case: H_in => H_in.
+    + have H_s' := H_ex11 _ H_in _ H_s.
+      inversion H_s'; subst.
+      simpl in *.
+      inversion H; subst.
+      apply s_in_regexp_lang_times => //.
+      exact: s_in_regexp_lang_plus_1.
+    + have H_s' := H_ex12 _ H_in _ H_s.
+      inversion H_s'; subst.
+      simpl in *.
+      inversion H; subst.
+      apply s_in_regexp_lang_times => //.
+      exact: s_in_regexp_lang_plus_2.
+  * move => s' H_s'.
+    inversion H_s'; subst.
+    simpl in *.
+    inversion H; subst.
+    inversion H3; subst.
+    + destruct s5.
+      -- simpl in *.
+         subst.
+         have H_sc: s_in_regexp_c_lang s' (regexp_times r11 r2) a.           
+           apply s_in_regexp_c_lang_cs.
+           simpl.
+           have ->: String a s' = "" ++ String a s' by [].
+           by apply s_in_regexp_lang_times.                      
+         apply H_ex11' in H_sc.
+         move: H_sc => [r0 [H_in H_s0]].
+         exists r0.
+         split => //.
+         by apply in_or_app; left.
+      -- simpl in *.
+         injection H0 => H_eq H_eq_c.
+         subst.
+         have H_sc: s_in_regexp_c_lang (s5 ++ s'0) (regexp_times r11 r2) a.
+           apply s_in_regexp_c_lang_cs.
+           simpl.
+           have ->: String a (s5 ++ s'0) = String a s5 ++ s'0 by [].
+           by apply s_in_regexp_lang_times.
+         apply H_ex11' in H_sc.
+         move: H_sc => [r0 [H_in H_s0]].
+         exists r0.
+         split => //.
+         by apply in_or_app; left.
+    + destruct s5.
+      -- simpl in *.
+         subst.
+         have H_sc: s_in_regexp_c_lang s' (regexp_times r12 r2) a.
+           apply s_in_regexp_c_lang_cs.
+           simpl.
+           have ->: String a s' = "" ++ String a s' by [].
+           by apply s_in_regexp_lang_times.                      
+         apply H_ex12' in H_sc.
+         move: H_sc => [r0 [H_in H_s0]].
+         exists r0.
+         split => //.
+         by apply in_or_app; right.
+      -- simpl in *.
+         injection H0 => H_eq H_eq_c.
+         subst.
+         have H_sc: s_in_regexp_c_lang (s5 ++ s'0) (regexp_times r12 r2) a.
+           apply s_in_regexp_c_lang_cs.
+           simpl.
+           have ->: String a (s5 ++ s'0) = String a s5 ++ s'0 by [].
+           by apply s_in_regexp_lang_times.
+         apply H_ex12' in H_sc.
+         move: H_sc => [r0 [H_in H_s0]].
+         exists r0.
+         split => //.
+         by apply in_or_app; right.        
+- rewrite /regexps_no_c_lt /=.
+  by apply regexp_lt_times_lt => /=; omega.
+- move: H_ex => [H_ex H_ex'].
+  split.
+  * move => r' H_in s' H_s.
+    apply: s_in_regexp_c_lang_cs => /=.
+    have H_s' := H_ex _ H_in _ H_s.
+    inversion H_s'; subst.
+    simpl in *.
+    inversion H; subst.
+    inversion H4; subst.
+    rewrite string_append_assoc. 
+    apply s_in_regexp_lang_times => //.
+    exact: s_in_regexp_lang_times.
+  * move => s' H_s'.
+    inversion H_s'; subst.
+    simpl in *.
+    inversion H; subst.
+    inversion H3; subst.
+    destruct s0.
+    + simpl in *.
+      destruct s'1.
+      -- simpl in *.
+         subst.
+         have H_sc: s_in_regexp_c_lang s' (regexp_times r11 (regexp_times r12 r2)) a.
+           apply s_in_regexp_c_lang_cs.
+           simpl.
+           have ->: String a s' = "" ++ String a s' by [].
+           apply s_in_regexp_lang_times => //.
+           have ->: String a s' = "" ++ String a s' by [].
+           by apply s_in_regexp_lang_times => //.
+         by apply H_ex' in H_sc.
+      -- injection H0 => H_eq H_eq_c; subst.
+         have H_sc: s_in_regexp_c_lang (s'1 ++ s'0) (regexp_times r11 (regexp_times r12 r2)) a.
+           apply s_in_regexp_c_lang_cs.
+           simpl.
+           have ->: String a (s'1 ++ s'0) = "" ++ String a (s'1 ++ s'0) by [].
+           apply s_in_regexp_lang_times => //.
+           have ->: String a (s'1 ++ s'0) = String a s'1 ++ s'0 by [].
+           by apply s_in_regexp_lang_times.
+         by apply H_ex' in H_sc.
+    + simpl in *.
+      injection H0 => H_eq H_eq_c.
+      subst.
+      have H_sc: s_in_regexp_c_lang (s0 ++ (s'1 ++ s'0)) (regexp_times r11 (regexp_times r12 r2)) a.
+        apply s_in_regexp_c_lang_cs.
+        simpl.
+        have ->: String a (s0 ++ s'1 ++ s'0) = String a s0 ++ s'1 ++ s'0 by [].
+        apply s_in_regexp_lang_times => //.
+        by apply s_in_regexp_lang_times.
+      apply H_ex' in H_sc.
+      move: H_sc => [r0 [H_in H_r0]].
+      exists r0.
+      split => //.
+      by rewrite -string_append_assoc.
+- rewrite /regexps_no_c_lt /=.
+  by apply regexp_lt_lt => /=; omega.
+- rewrite /regexps_no_c_lt /=.
+  by apply regexp_lt_lt => /=; omega.
+- move: H_ex1 => [H_ex1 H_ex1'].
+  move: H_ex2 => [H_ex2 H_ex2'].
+  split.
+  * move => r' H_in s' H_s'.
+    apply: s_in_regexp_c_lang_cs => /=.
+    apply in_app_or in H_in.
+    case: H_in => H_in.
+    + have H_s0 := H_ex2 _ H_in _ H_s'.
+      inversion H_s0; subst.
+      simpl in *.
+      have ->: String a s' = "" ++ String a s' by [].    
+      apply s_in_regexp_lang_times => //.
+      exact: s_in_regexp_lang_star_1.
+    + apply fold_left_list_f_in in H_in.
+      move: H_in => [r0 [H_in' H_eq_r0]].
+      subst.
+      inversion H_s'; subst.
+      have H_s0 := H_ex1 _ H_in' _ H2.
+      inversion_clear H3; subst.
+      inversion_clear H_s0; subst.
+      simpl in *.
+      have ->: String a (s5 ++ s0 ++ s') = (String a s5 ++ s0) ++ s' by rewrite -string_append_assoc.      
+      apply s_in_regexp_lang_times => //.
+      exact: s_in_regexp_lang_star_2.
+  * move => s' H_s'.
+    inversion H_s'; subst.
+    simpl in *.
+    inversion H; subst.
+    destruct s5.
+    + simpl in *.
+      subst.
+      apply s_in_regexp_c_lang_cs in H4.
+      apply H_ex2' in H4.
+      move: H4 => [r0 [H_in H_r0]].
+      exists r0.
+      split => //.
+      apply in_or_app.
+      by left.
+    + injection H0 => H_eq H_eq_c.
+      subst.
+      apply regexp_star_ex in H3.
+      move: H3 => [s1 [s2 [H_eq [H_s12 H_s12']]]].
+      subst.
+      apply s_in_regexp_c_lang_cs in H_s12.
+      apply H_ex1' in H_s12.
+      move: H_s12 => [r0 [H_in H_r0]].
+      exists (regexp_times r0 (regexp_times (regexp_star r1) r2)).
+      split.
+      -- apply in_or_app.
+         right.
+         apply in_split in H_in.
+         move: H_in => [l'2 [l'3 H_eq]].
+         subst.
+         move {H_ex1 H_ex1'}.
+         elim: l'2 => //=.
+           rewrite fold_left_f_list_app /=.
+           apply in_or_app.
+           by right; left.
+         move => r'0 l' IH.
+         rewrite fold_left_f_list_app.
+         apply in_or_app.
+         by left.
+      -- rewrite -string_append_assoc.
+         apply s_in_regexp_lang_times => //.
+         exact: s_in_regexp_lang_times.
+- rewrite /regexps_no_c_lt /=.
+  by apply regexp_lt_lt => /=; omega.
+- move: H_ex => [H_ex H_ex'].
+  split.
+  * move => r' H_in s' H_s'.
+    apply: s_in_regexp_c_lang_cs => /=.
+    apply fold_left_list_f_in in H_in.
     move: H_in => [r0 [H_in' H_eq_r0]].
     subst.
-    inversion H_s'; subst.
-    have H_s0 := H_ex1 _ H_in' _ H2.
-    inversion_clear H3; subst.
-    inversion_clear H_s0; subst.
+    inversion_clear H_s'; subst.
+    have H_ex0 := H_ex _ H_in' _ H.
+    inversion_clear H_ex0; subst.
     simpl in *.
-    have ->: String a (s5 ++ s0 ++ s') = (String a s5 ++ s0) ++ s' by rewrite -string_append_assoc.      
-    apply s_in_regexp_lang_times => //.
+    have ->: String a (s5 ++ s'0) = (String a s5) ++ s'0 by [].
     exact: s_in_regexp_lang_star_2.
-- rewrite /regexps_no_c_lt /=.
-  by apply regexp_lt_lt => /=; omega.
-- move => r' H_in s' H_s'.
-  apply: s_in_regexp_c_lang_cs => /=.
-  apply fold_left_list_f_in in H_in.
-  move: H_in => [r0 [H_in' H_eq_r0]].
-  subst.
-  inversion_clear H_s'; subst.
-  have H_ex' := H_ex _ H_in' _ H.
-  inversion_clear H_ex'; subst.
-  simpl in *.
-  have ->: String a (s5 ++ s'0) = (String a s5) ++ s'0 by [].
-  exact: s_in_regexp_lang_star_2.
+  * move => s' H_s'.
+    inversion H_s'; subst.
+    simpl in *.
+    apply regexp_star_ex in H.    
+    move: H => [s1 [s2 [H_eq [H_s1 H_s2]]]].
+    subst.
+    apply s_in_regexp_c_lang_cs in H_s1.
+    apply H_ex' in H_s1.
+    move: H_s1 => [r0 [H_in H_r0]].
+    exists (regexp_times r0 (regexp_star r)).
+    split.
+    + apply in_split in H_in.
+      move: H_in => [l1 [l2 H_eq]].
+      subst.
+      elim: l1 {H_ex' H_ex} => /=.
+        rewrite fold_left_f_list_app /=.
+        by apply in_or_app; right; left.
+      move => r1 l IH.
+      rewrite fold_left_f_list_app /=.
+      by apply in_or_app; left.
+    + exact: s_in_regexp_lang_times.
 Defined.
 
 Definition regexps_no_c : forall (rs : regexp * a), regexps_no_c_t rs :=
@@ -481,7 +772,7 @@ exact: accept_lt_lexprod''_wf.
 Defined.
 
 Definition accept_p (rs : regexp * string) :=
-  s_matches_r (fst rs) (snd rs).
+  s_in_regexp_lang (snd rs) (fst rs).
 
 Definition accept_t (rs : regexp * string) :=
 { accept_p rs }+{ ~ accept_p rs }.
@@ -604,18 +895,18 @@ Definition accept_F : forall rs : regexp * string,
            end (refl_equal _)
        end (refl_equal _)); destruct rs; simpl in *; subst.
 - by move => H_m; inversion H_m.
-- exact: s_matches_r_unit.
+- exact: s_in_regexp_lang_unit.
 - by move => H_m; inversion H_m.
 - apply accept_lt_regexp => //.
   apply regexp_lt_lt.
   rewrite /=.
   by omega.
-- exact: s_matches_r_plus_1.
+- exact: s_in_regexp_lang_plus_1.
 - apply accept_lt_regexp => //.
   apply regexp_lt_lt.
   rewrite /=.
   by omega.
-- exact: s_matches_r_plus_2.
+- exact: s_in_regexp_lang_plus_2.
 - by move => H_m; inversion H_m; subst.
 - apply accept_lt_regexp => //.
   apply regexp_lt_lt.
@@ -625,27 +916,28 @@ Definition accept_F : forall rs : regexp * string,
   apply regexp_lt_lt.
   rewrite /=.
   by omega.
-- exact: s_matches_r_times _ _ _ _ H_r1 H_r2.
+- exact: s_in_regexp_lang_times _ _ _ _ H_r1 H_r2.
 - move => H_m; inversion H_m; subst.
-  by destruct s1, s2.
+  case: H_r2.
+  by destruct s5, s'.
 - move => H_m; inversion H_m; subst.
-  by destruct s1.
-- by apply s_matches_r_star_1.
+  by destruct s5.
+- by apply s_in_regexp_lang_star_1.
 - by move => H_m; inversion H_m.
 - by move => H_m; inversion H_m.
-- exact: s_matches_r_char.
+- exact: s_in_regexp_lang_char.
 - by move => H_m; inversion H_m; subst.
 - by move => H_m; inversion H_m; subst.
 - apply accept_lt_regexp => //.
   apply regexp_lt_lt.
   rewrite /=.
   by omega.
-- exact: s_matches_r_plus_1.
+- exact: s_in_regexp_lang_plus_1.
 - apply accept_lt_regexp => //.
   apply regexp_lt_lt.
   rewrite /=.
   by omega.
-- exact: s_matches_r_plus_2.
+- exact: s_in_regexp_lang_plus_2.
 - by move => H_m; inversion H_m.
 - move => H_m; inversion H_m; subst.
   by inversion H2.
@@ -655,8 +947,8 @@ Definition accept_F : forall rs : regexp * string,
   by omega.
 - have H_eq: append "" (String c s') = String c s' by [].
   rewrite -H_eq.
-  apply s_matches_r_times => //.
-  exact: s_matches_r_unit.
+  apply s_in_regexp_lang_times => //.
+  exact: s_in_regexp_lang_unit.
 - move => H_s.
   inversion H_s; subst.
   inversion H2; subst.
@@ -666,60 +958,459 @@ Definition accept_F : forall rs : regexp * string,
 - exact: accept_lt_string.
 - have H_eq: append (String c' "") s' = String c' s' by [].
   rewrite -H_eq.
-  apply s_matches_r_times => //.
-  exact: s_matches_r_char.
+  apply s_in_regexp_lang_times => //.
+  exact: s_in_regexp_lang_char.
 - move => H_m; inversion H_m; subst.
   inversion H2; subst.
-  injection H1 => H_eq.
+  injection H => H_eq.
   by subst.
 - move => H_m; inversion H_m; subst.
   inversion H2; subst.
-  injection H1 => H_eq H_eq'.
+  injection H => H_eq H_eq'.
   by subst.
 - apply accept_lt_regexp => //.
   apply regexp_lt_lt.
   rewrite /=.
   by omega.
 - inversion H_r11; subst.
-  apply s_matches_r_times => //.
-  exact: s_matches_r_plus_1.
+  apply s_in_regexp_lang_times => //.
+  exact: s_in_regexp_lang_plus_1.
 - apply accept_lt_regexp => //.
   apply regexp_lt_lt.
   rewrite /=.
   by omega.
 - inversion H_r12; subst.
-  apply s_matches_r_times => //.
-  exact: s_matches_r_plus_2.
+  apply s_in_regexp_lang_times => //.
+  exact: s_in_regexp_lang_plus_2.
 - move => H_m; inversion H_m; subst.
   inversion H2; subst.
   * contradict H_r11.
-    rewrite -H1.
-    exact: s_matches_r_times.
+    rewrite -H.
+    exact: s_in_regexp_lang_times.
   * contradict H_r12.
-    rewrite -H1.
-    exact: s_matches_r_times.
+    rewrite -H.
+    exact: s_in_regexp_lang_times.
 - apply accept_lt_regexp => //.
   by apply regexp_lt_times_lt => /=; omega.
 - inversion H_r; subst.
   inversion H3; subst.
   rewrite string_append_assoc.
-  apply s_matches_r_times => //.
-  exact: s_matches_r_times.
+  apply s_in_regexp_lang_times => //.
+  exact: s_in_regexp_lang_times.
 - move => H_s; inversion H_s; subst.
   inversion H2; subst.
   contradict H_r.
-  rewrite -string_append_assoc in H1.
-  rewrite -H1.
-  apply s_matches_r_times => //.
-  exact: s_matches_r_times.
+  rewrite -string_append_assoc in H.
+  rewrite -H.
+  apply s_in_regexp_lang_times => //.
+  exact: s_in_regexp_lang_times.
 - by admit.
 - move => r0.
   exact: accept_lt_string.
 - move: H_ex => [H_in H_acc].
   inversion H_acc; subst.
-  have H_l' := H_l _ H_in _ H1.
+  move: H_l => [H_l H_l0].
+  have H_l' := H_l _ H_in _ H2.
+  inversion H_l'; subst.
+  simpl in *.
+  rewrite /accept_p /=.
+  rewrite -H1 /=.
+  have ->: String c (s5 ++ s'0) = String c s5 ++ s'0 by [].
+  by apply s_in_regexp_lang_star_2.
+- rewrite /accept_p /=. 
+  move => H_s.
+  have H_s' := star_times _ _ _ H_s.
+  have [s1 [s2 [H_eq [H_s1 H_s2]]]] := regexp_star_ex _ _ _ H_s.
+  subst.
+  have H_c_l: s_in_regexp_c_lang (s1 ++ s2) (regexp_times r' (regexp_star r')) c by apply s_in_regexp_c_lang_cs.
+  have H_s0: forall r, (forall s, s_in_regexp_c_lang s r' c -> s_in_regexp_lang s r) -> s_in_regexp_lang (String c (s1 ++ s2)) (regexp_times (regexp_char c) (regexp_times r (regexp_star r'))).
+    move => r H_sc.
+    have ->: String c (s1 ++ s2) = String c "" ++ (s1 ++ s2) by [].
+    apply s_in_regexp_lang_times; first by apply s_in_regexp_lang_char.
+    apply s_in_regexp_lang_times => //.
+    apply H_sc.
+    by apply s_in_regexp_c_lang_cs.
+  move: H_l => [H_l H_ex].
+  have H_s1' := H_ex s1.
+  have H_cs: s_in_regexp_c_lang s1 r' c by apply s_in_regexp_c_lang_cs.
+  apply H_s1' in H_cs.
+  move: H_cs => [r [H_in H_ss]].
+  apply H_l' in H_in.
+  case: H_in.
+  rewrite /accept_p /=.
+  by apply s_in_regexp_lang_times.
+Admitted.
+
+(*
+  inversion H2; subst.
+  simpl in *.
+  injection H => H_eq.
+  by subst.
+
+  have H_ex: forall r, (forall s, s_in_regexp_c_lang s r' c -> s_in_regexp_lang s r) -> In r l by admit.
+  destruct l.
+  - by admit.
+  have [r [H_in H_all]]: exists r, In r l /\ (forall s, s_in_regexp_c_lang s r' c -> s_in_regexp_lang s r) by admit.
+  apply H_s0 in H_all.
+  apply H_l' in H_in.
+  case: H_in.
+  rewrite /accept_p /=.
+  inversion H_all; subst.
+  inversion H2; subst.
+  simpl in *.
+  injection H => H_eq.
+  by subst.
+    
+
+    
+
+  inversion H_s'; subst.
+
+  destruct s5.
+    simpl in *.
+    subst.
+    have [r H_in]: exists r, In r l by admit.
+    have H_l'0 := H_l' _ H_in.
+    rewrite /accept_p /= in H_l'0.
+    case: H_l'0.
+    
+    
+    
+
+  have H_c_l: s_in_regexp_c_lang s' (regexp_times r' (regexp_star r')) c by apply s_in_regexp_c_lang_cs.
+  clear H_l.
+  
+
+  have H_l: forall r, In r l -> (forall s, s_in_regexp_c_lang s r' c -> s_in_regexp_lang s r) by admit.
+  
+
+  inversion H_s'; subst.
+  rewrite /accept_p /= in H_l'.
+  destruct s5.
+  * simpl in *.
+    subst.
+    
+    inversion H_c_l; subst.
+    
+    
+
+  have H_s0: forall r, In r l -> (forall s, s_in_regexp_c_lang s r' c -> s_in_regexp_lang s r) -> s_in_regexp_lang (String c s') (regexp_times (regexp_char c) (regexp_times r (regexp_star r'))).
+    move => r H_in H_s0.
+    have H_acc := H_l' r H_in.
+    rewrite /accept_p /= in H_acc.
+    clear H_l H_l' H_s H_c_l.
+
+    inversion H_s'; subst.
+    destruct s5.
+    * simpl in *.
+      subst.
+      have ->: String c s' = String c "" ++ s' by [].  
+      apply s_in_regexp_lang_times; first by apply s_in_regexp_lang_char.
+      by admit.
+    * simpl in *.
+      injection H => H_eq H_eq_c.
+      subst.
+      have ->: String c (s5 ++ s'0) = String c "" ++ (s5 ++ s'0) by [].
+      apply s_in_regexp_lang_times; first by apply s_in_regexp_lang_char.
+      apply s_in_regexp_lang_times => //.
+      apply H_s0.
+      by apply s_in_regexp_c_lang_cs.
+
+      
+      have ->: String c "" ++ 
+      
+
+    clear H_l H_l' H_s H_s' H_c_l.    
+    destruct s5.
+    * simpl in *.
+      subst.
+      rewrite H.
+      subst.
+      have H_s00 := H_s0 "".
+
+      have ->: String c s' = String c "" ++ s' by [].
+      apply s_in_regexp_lang_times.
+
+    apply s_in_regexp_lang_times => //.
+    destruct s5.
+    * simpl in *.
+      subst.
+
+    destruct s5.
+      simpl in *.
+      rewrite H.
+      have ->: String c s' = String c "" ++ s' by [].
+      apply s_in_regexp_lang_times; first by apply s_in_regexp_lang_char.
+      have H_ss: s_in_regexp_c_lang "" r' c.
+        apply s_in_regexp_c_lang_cs.
+        
+      
+
+
+    apply s_in_regexp_lang_times; first by apply s_in_regexp_lang_char.
+
+    
+    
+    
+  
+
+  have [r [H_in H_ex]]: exists r, In r l /\ forall s, s_in_regexp_c_lang s r' c -> s_in_regexp_lang s r by admit.
+  inversion H_s'; subst.
+  destruct s5.
+    simpl in *.
+    subst.
+    
+
+
+
+
+  have H_
+
+
+  have H_s': s_in_regexp_lang (String c s') (regexp_times r' (regexp_star r')).
+    
+
+  move => H_acc.
+  rew
+
+  have H_ex: exists r, In r l /\ forall s, s_in_regexp_c_lang s r' c -> s_in_regexp_lang s r by admit.
+  move: H_ex => [r [H_in H_r]].
+  have H_l'0 := H_l' _ H_in.
+  case: H_l'0.
+  inversion H_acc; subst.
+  destruct s5.
+  * simpl in *.
+    rewrite /accept_p /=.
+    
+
+  have H_s' := H_r (String c s').
+  have H_l0 := H_
+
+  inversion H_acc; subst.
+
+  
+
+  suff H_suff: ~ s_in_regexp_lang (String c s') (regexp_times r (regexp_star r')).
+    move => H_acc.
+    inversion H_acc; subst.
+    contradict H_suff.
+    rewrite -H.
+    by apply s_in_regexp_lang_times.
+  move => H_s.
+  (* .. *)
+  have H_ex: exists r, forall s, s_in_regexp_c_lang s (regexp_times r' (regexp_star r')) c -> s_in_regexp_lang s r by admit.
+  move: H_ex => [r H_r].
+  have H_s' := H_r s'.
+  clear H_r.
+  have H_c_l: s_in_regexp_c_lang s' (regexp_times r' (regexp_star r')) c by apply s_in_regexp_c_lang_cs.
+  apply H_s' in H_c_l.
+  have H_ex': ~ exists r, accept_p (regexp_times (regexp_char c) (regexp_times r (regexp_star r')), String c s') by admit.
+  case: H_ex'.
+  exists r.
+  rewrite /accept_p /=.
+  have ->: String c s' = String c "" ++ s' by [].
+  apply s_in_regexp_lang_times; first by apply s_in_regexp_lang_char.
+  have ->: s' = s' ++ "".
+    clear.
+    elim: s' => //.
+    move => c s' H_eq.
+    by rewrite {1}H_eq.
+  apply s_in_regexp_lang_times => //.
+  apply s_in_regexp_lang_star_1.
+    
+
+
+  inversion H_c_l; subst.
+  simpl in *.
+
+  inversion H_s; subst.
+  apply H_r in H2.
+
+
+  have H_all: ~ accept_p ((regexp_times (regexp_char c) (regexp_times r (regexp_star r')), String c s')) by admit.
+  case: H_all.
+  have H_s' := H_r s'.
+
+  have H_acc: ~ accept_p (regexp_times r (regexp_star r'), s') by admit.
+  case: H_acc.
+  rewrite /accept_p /=.
+  
+
+
+  
+    move => r H_in H_acc.
+    inversion H_acc; subst.
+    inversion H2; subst.
+    inversion H3; subst.
+    simpl in H.
+    injection H => H_eq.
+    rewrite H_eq in H3.
+    by have H_l0 := H_l' _ H_in.
+  have H_ex: exists r, s_in_regexp_c_lang (String c s') r c by admit.
+  move: H_ex => [r H_c].
+  inversion H_c; subst.
+  simpl in *.
+  
+
+
+
+  have H_ex: ~ exists r, accept_p (regexp_times r (regexp_star r'), s').
+    move => [r H_ex].
+    by admit.
+  have H_ex': ~ exists r, accept_p (regexp_times (regexp_char c) (regexp_times r (regexp_star r')), String c s').
+    move => [r H_ex'].
+    case: H_ex.
+    exists r.
+    inversion H_ex'; subst.
+    inversion H2; subst.
+    simpl in H.
+    by injection H => H_eq; subst.
+  clear H_l' H_l H_all H_ex.
+  case: H_ex'.
+  rewrite /accept_p /=.
+  have H_c: s_in_regexp_c_lang s' r' c.
+
+  inversion H_s; subst.
+  destruct s5.
+  simpl in *.
+  * subst.
+    exists regexp_unit.
+    have ->: String c s' = String c "" ++ s' by [].
+    apply s_in_regexp_lang_times; first by apply s_in_regexp_lang_char.
+    have ->: s' = "" ++ s' by [].
+    apply s_in_regexp_lang_times => //.
+    inversion H3; subst.
+    
+    inversion H3; subst.
+    exists regexp_unit.
+
+
+  contradict
+
+  case: H_ex'.
+  rewrite /accept_p.
+
+  inversion H_s; subst.
+  case: H_ex.
+  exists 
+
+
+  have H_c_l: s_in_regexp_c_lang s' (regexp_times r' (regexp_star r')) c.
+    apply s_in_regexp_c_lang_cs.
+    simpl.
+    apply H_s.
+   
+  rewrite /accept_p /= in H_all.
+
+  (forall r, In r l -> ~ In 
+  
+  (forall r, In r l -> ~ s_in_regexp_lang (String c s') (regexp_times (regexp_char c) (regexp_times r (regexp_star r')))) ->
+  ~ s_in_regexp_lang (String c s') (regexp_times r' (regexp_star r'))
+
+    s_in_regexp_lang (String c s') (regexp_times r' (regexp_star r')) ->
+    
+
+
+  have H_in: In (regexp_times (regexp_char c) r') l by admit.
+  apply H_all in H_in.
+  case: H_in.
+  have ->: String c s' = String c "" ++ s' by [].
+  apply s_in_regexp_lang_times.
+  * exact: s_in_regexp_lang_char.
+  * 
+
+    
+
+  have H_u: In (regexp_char c) l by admit.
+  apply H_all in H_u.
+  clear H_all.
+  case: H_u.
+  have ->: String c s' = String c "" ++ s' by [].
+  apply s_in_regexp_lang_times.
+  * apply s_in_regexp_lang_char.
+  * have ->: s' = "" ++ s' by [].
+    apply s_in_regexp_lang_times.
+    + apply s_in_regexp_lang_unit.
+    + inversion H_s; subst.
+      destruct s5.
+      -- simpl in H.
+         
+
+  have H_in: In (regexp_times r' (regexp_star r')) l by admit.
+  apply H_all in H_in.
+  case: H_in.
+  rewrite /accept_p /=.
+  have
+    
+  
+
+  have H_in: exists r0, In r0 l by admit.
+  move: H_in => [r0 H_in].
+  have H_l0 := H_l _ H_in (String c s').
+  have H_l1 := H_l' _ H_in.
+  contradict H_l1.
+  
+
+  inversion H_s; subst.
+  
+    
+
+  inversion H_acc; subst.
+
+
+  have H_s: s_in_regexp_lang (String c s') (regexp_times r' (regexp_star r')).
+    rewrite -H.
+    by apply s_in_regexp_lang_times.
+  
+  have H_l0 := H_l _ H_in s'.
+
+  have H_c: s_in_regexp_c_lang s' r' c by admit.
+  inversion H_c; subst.
+  simpl in *.
+  rewrite -H in H0.
+  have H_l1: accept_p (regexp_times (regexp_char c) (regexp_star r'), s').
+
+  
+
+  have H_l0 := H_l _ H_in s'.
+
+
+  inversion H_l0; subst.
+  simpl in H0.
+  have H_l1 := H_l _ H_in _ H0.
+  inversion H_l1; subst.
+  simpl in *.
+
+  have H_l1 := H_l' _ H_in.
+  
+
+  destruct s5.
+  * simpl in *.
+    rewrite H in H2.
+    inversion H2; subst.
+    
+    
+    
+
+  have H_in: In (regexp_star r') l by admit.
+  have H_l0 := H_l _ H_in _ H2.
+  inversion H_l0; subst.
+  simpl in H0.
+  have H_l1 := H_l' _ H_in.
+  case: H_l1.
+  
+  
+
+  contradict H_l1.
+  rewrite /accept_p /=.
+  destruct s5.
+  * rewrite /= in H.
+    destruct s'0; subst => //.
+    injection H => H_eq H_eq_c.
+    subst.   
 - by admit.
-Defined 
+Defined.
+*)
 
 Definition accept : forall (rs : regexp * string), accept_t rs :=
 @well_founded_induction _ _ accept_lt_well_founded accept_t accept_F.
