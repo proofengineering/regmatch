@@ -8,7 +8,7 @@ ifeq "$(COQPROJECT_EXISTS)" ""
 $(error "Run ./configure before running make")
 endif
 
-OCAMLBUILD = ocamlbuild -tag safe_string -cflag -g
+OCAMLBUILD = ocamlbuild -use-menhir -tag safe_string -cflag -g
 OTT = ott
 PDFLATEX = pdflatex
 
