@@ -253,24 +253,21 @@ case => //=.
     by apply s_in_regexp_lang_times.
 Qed.
 
-
-Lemma no_regexp_star_zero :
-forall s' c, ~ s_in_regexp_lang (String c s') (regexp_star regexp_zero).
-Proof.
-move => s' c H_s.
-apply star_times in H_s.
-inversion H_s; subst.
-by inversion H2.
-Qed.
-
-Lemma regexp_star_ex : forall r' s' c,
+Lemma regexp_star_split : forall r' s' c,
   s_in_regexp_lang (String c s') (regexp_star r') ->
   exists s1 s2, s' = s1 ++ s2 /\ s_in_regexp_lang (String c s1) r' /\ s_in_regexp_lang s2 (regexp_star r').
 Proof.
-elim => //=.
-- move => s' c H_s.
-  inversion H_s; subst.
-Admitted.
+  intros.
+  remember (String c s') as s0.
+  remember (regexp_star r') as r0.
+  revert r' s' c Heqs0 Heqr0.
+  induction H; intros; try congruence.
+  inversion Heqr0; subst; clear Heqr0.
+  destruct s5.
+  - apply IHs_in_regexp_lang2; auto.
+  - simpl in *. inversion Heqs0; subst; clear Heqs0.
+    eauto.
+Qed.
 
 Definition regexps_no_c_F : forall rc : regexp * a,
   (forall rc', regexps_no_c_lt rc' rc -> regexps_no_c_t rc') -> regexps_no_c_t rc.
@@ -618,7 +615,7 @@ refine
       by left.
     + injection H0 => H_eq H_eq_c.
       subst.
-      apply regexp_star_ex in H3.
+      apply regexp_star_split in H3.
       move: H3 => [s1 [s2 [H_eq [H_s12 H_s12']]]].
       subst.
       apply s_in_regexp_c_lang_cs in H_s12.
@@ -661,7 +658,7 @@ refine
   * move => s' H_s'.
     inversion H_s'; subst.
     simpl in *.
-    apply regexp_star_ex in H.    
+    apply regexp_star_split in H.
     move: H => [s1 [s2 [H_eq [H_s1 H_s2]]]].
     subst.
     apply s_in_regexp_c_lang_cs in H_s1.
@@ -1041,7 +1038,7 @@ Definition accept_F : forall rs : regexp * string,
   * injection H => H_eq H_eq_c.
     subst.
     clear H.
-    apply regexp_star_ex in H2.
+    apply regexp_star_split in H2.
     move: H2 => [s1 [s2 [H_s1 [H_s2 H_eq]]]].
     subst.
     have H_sc: s_in_regexp_c_lang s1 r1 c by apply s_in_regexp_c_lang_cs.
@@ -1068,7 +1065,7 @@ Definition accept_F : forall rs : regexp * string,
 - rewrite /accept_p /=. 
   move => H_s.
   have H_s' := star_times _ _ _ H_s.
-  have [s1 [s2 [H_eq [H_s1 H_s2]]]] := regexp_star_ex _ _ _ H_s.
+  have [s1 [s2 [H_eq [H_s1 H_s2]]]] := regexp_star_split _ _ _ H_s.
   subst.
   have H_c_l: s_in_regexp_c_lang (s1 ++ s2) (regexp_times r' (regexp_star r')) c by apply s_in_regexp_c_lang_cs.
   have H_s0: forall r, (forall s, s_in_regexp_c_lang s r' c -> s_in_regexp_lang s r) -> s_in_regexp_lang (String c (s1 ++ s2)) (regexp_times (regexp_char c) (regexp_times r (regexp_star r'))).
