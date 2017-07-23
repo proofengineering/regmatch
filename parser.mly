@@ -15,11 +15,11 @@
 
 %%
 
-main: r = regex EOF { r }
+main: r = regexp EOF { r }
 
-regex:
+regexp:
 | c = CHAR { Regexp_char c }
-| LPAREN r = regex RPAREN { r }
-| r1 = regex PLUS r2 = regex { Regexp_plus (r1, r2) }
-| r = regex STAR { Regexp_star r }
-| r1 = regex r2 = regex { Regexp_times (r1, r2) } %prec TIMES
+| LPAREN r = regexp RPAREN { r }
+| r1 = regexp PLUS r2 = regexp { Regexp_plus (r1, r2) }
+| r = regexp STAR { Regexp_star r }
+| r1 = regexp r2 = regexp { Regexp_times (r1, r2) } %prec TIMES

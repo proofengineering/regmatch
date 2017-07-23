@@ -11,6 +11,7 @@ endif
 OCAMLBUILD = ocamlbuild -use-menhir -tag safe_string -cflag -g
 OTT = ott
 PDFLATEX = pdflatex
+MENHIR = menhir --coq --coq-no-complete
 
 OTTFILES = regexp.ott
 VFILES = $(OTTFILES:.ott=.v)
@@ -22,7 +23,7 @@ MLFILES = accept.ml accept.mli
 default: Makefile.coq
 	$(MAKE) -f Makefile.coq
 
-matcher.native: $(MLFILES) matcher.ml
+matcher.native: $(MLFILES) matcher.ml parser.mly lexer.mll
 	$(OCAMLBUILD) matcher.native
 
 Makefile.coq: $(VFILES)
@@ -30,6 +31,9 @@ Makefile.coq: $(VFILES)
           -extra '$(MLFILES)' \
             'accept_extrocaml.v regexp_metatheory.vo' \
             '$$(COQC) $$(COQDEBUG) $$(COQFLAGS) accept_extrocaml.v'
+
+parser.v: parser.vy
+	$(MENHIR) parser.vy
 
 $(VFILES): %.v: %.ott
 	$(OTT) -o $@ -coq_expand_list_types false $<
@@ -47,7 +51,7 @@ $(PDFFILES): $(TEXFILES)
 clean:
 	if [ -f Makefile.coq ]; then \
 	  $(MAKE) -f Makefile.coq cleanall; fi
-	rm -f Makefile.coq $(VFILES)
+	rm -f Makefile.coq $(VFILES) parser.v
 	$(OCAMLBUILD) -clean
 
 .PHONY: default clean

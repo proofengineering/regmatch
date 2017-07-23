@@ -5,7 +5,6 @@ Require Import regexp.
 Require Import regexp_metatheory.
 
 Require Import ExtrOcamlBasic.
-Require Import ExtrOcamlNatInt.
 Require Import ExtrOcamlString.
 
 Extract Inlined Constant fst => "fst".
