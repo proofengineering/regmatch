@@ -1,9 +1,10 @@
-COQVERSION := $(shell coqc --version|egrep "version (8\\.5|8\\.6)")
-ifeq "$(COQVERSION)" ""
-$(error "Only compatible with Coq version 8.5 or 8.6")
+include Makefile.detect-coq-version
+
+ifeq (,$(filter $(COQVERSION),8.5 8.6 8.7 trunk))
+$(error "only compatible with Coq version 8.5 or later")
 endif
 
-COQPROJECT_EXISTS = $(wildcard _CoqProject)
+COQPROJECT_EXISTS := $(wildcard _CoqProject)
 ifeq "$(COQPROJECT_EXISTS)" ""
 $(error "Run ./configure before running make")
 endif
@@ -18,19 +19,23 @@ VFILES = $(OTTFILES:.ott=.v)
 TEXFILES = $(OTTFILES:.ott=.tex)
 PDFFILES = $(TEXFILES:.tex=.pdf)
 
-MLFILES = accept.ml accept.mli
+ACCEPTMLFILES = accept.ml accept.mli
+PARSERMLFILES = parser.ml parser.mli
 
 default: Makefile.coq
 	$(MAKE) -f Makefile.coq
 
-matcher.native: $(MLFILES) matcher.ml parser.mly lexer.mll
+matcher.native: $(ACCEPTMLFILES) matcher.ml parser.mly lexer.mll
 	$(OCAMLBUILD) matcher.native
 
-Makefile.coq: $(VFILES)
+Makefile.coq: $(VFILES) parser.v
 	coq_makefile -f _CoqProject -o Makefile.coq -no-install \
-          -extra '$(MLFILES)' \
+          -extra '$(ACCEPTMLFILES)' \
             'accept_extrocaml.v regexp_metatheory.vo' \
-            '$$(COQC) $$(COQDEBUG) $$(COQFLAGS) accept_extrocaml.v'
+            '$$(COQC) $$(COQDEBUG) $$(COQFLAGS) accept_extrocaml.v' \
+           -extra '$(PARSERMLFILES)' \
+            'parser_extrocaml.v parser.vo' \
+            '$$(COQC) $$(COQDEBUG) $$(COQFLAGS) parser_extrocaml.v'
 
 parser.v: parser.vy
 	$(MENHIR) parser.vy
@@ -38,7 +43,7 @@ parser.v: parser.vy
 $(VFILES): %.v: %.ott
 	$(OTT) -o $@ -coq_expand_list_types false $<
 
-$(MLFILES): Makefile.coq
+$(ACCEPTMLFILES) $(PARSERMLFILES): Makefile.coq
 	$(MAKE) -f Makefile.coq $@
 
 $(TEXFILES): %.tex: %.ott
@@ -55,4 +60,5 @@ clean:
 	$(OCAMLBUILD) -clean
 
 .PHONY: default clean
-.NOTPARALLEL: $(MLFILES)
+.NOTPARALLEL: $(ACCEPTMLFILES)
+.NOTPARALLEL: $(PARSERMLFILES)

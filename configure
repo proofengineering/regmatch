@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
-DEPS=(Ott)
-EXTRA=(regexp.v)
+DEPS=(Ott ParserValidator)
+EXTRA=(regexp.v parser.v)
+NAMESPACE_ParserValidator__="\"\""
 source coqproject.sh

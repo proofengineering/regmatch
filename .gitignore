@@ -15,4 +15,7 @@ regexp.log
 regexp.tex
 regexp.aux
 regexp.pdf
+parser.v
+parser.ml
+parser.mli
 _CoqProject
