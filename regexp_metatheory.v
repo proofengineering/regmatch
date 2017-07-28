@@ -177,37 +177,37 @@ Variable char : Type.
 
 Variable char_eq_dec : forall c0 c1 : char, {c0 = c1}+{c0 <> c1}.
 
-Fixpoint regexp_size (r : regexp char) : nat :=
+Fixpoint regexp_size (r : re char) : nat :=
 match r with
-| regexp_zero => 1
-| regexp_unit => 1
-| regexp_char _ => 1
-| regexp_plus r1 r2 => regexp_size r1 + regexp_size r2 + 1
-| regexp_times r1 r2 => regexp_size r1 + regexp_size r2 + 1
-| regexp_star r => regexp_size r + 1
+| re_zero => 1
+| re_unit => 1
+| re_char _ => 1
+| re_plus r1 r2 => regexp_size r1 + regexp_size r2 + 1
+| re_times r1 r2 => regexp_size r1 + regexp_size r2 + 1
+| re_star r => regexp_size r + 1
 end.
 
-Definition regexp_size_lt (r r' : regexp char) := regexp_size r < regexp_size r'.
+Definition regexp_size_lt (r r' : re char) := regexp_size r < regexp_size r'.
 
 Lemma regexp_size_wf : well_founded regexp_size_lt.
 Proof.
 exact: (well_founded_lt_compat _ (fun r => regexp_size r)).
 Defined.
 
-Fixpoint regexp_subsize (r : regexp char) : nat :=
+Fixpoint regexp_subsize (r : re char) : nat :=
 match r with
-| regexp_times r1 r2 => regexp_size r1
+| re_times r1 r2 => regexp_size r1
 | _ => 0
 end.
 
-Definition regexp_subsize_lt (r r' : regexp char) := regexp_subsize r < regexp_subsize r'.
+Definition regexp_subsize_lt (r r' : re char) := regexp_subsize r < regexp_subsize r'.
 
 Lemma regexp_subsize_wf : well_founded regexp_subsize_lt.
 Proof.
 exact: (well_founded_lt_compat _ (fun r => regexp_subsize r)).
 Defined.
 
-Definition regexp_lt_size_subsize_lexprod' (r r' : regexp char) :=
+Definition regexp_lt_size_subsize_lexprod' (r r' : re char) :=
 lexprod' lt (regexp_size r, regexp_subsize r) (regexp_size r', regexp_subsize r').
 
 Lemma regexp_lt_size_subsize_lexprod'_wf : well_founded regexp_lt_size_subsize_lexprod'.
@@ -217,17 +217,17 @@ apply (wf_inverse_image _ _ _ (fun r => (regexp_size r, regexp_subsize r))).
 by apply wf_lexprod'; apply lt_wf.
 Defined.
 
-Inductive regexp_lt : regexp char -> regexp char -> Prop :=
-| regexp_lt_lt : forall r r' : regexp char, 
+Inductive regexp_lt : re char -> re char -> Prop :=
+| regexp_lt_lt : forall r r' : re char, 
     regexp_size r < regexp_size r' -> 
     regexp_lt r r'
-| regexp_lt_times_lt : forall r11 r12 r21 r22 : regexp char,
-    regexp_size (regexp_times r11 r12) = regexp_size (regexp_times r21 r22) ->
+| regexp_lt_times_lt : forall r11 r12 r21 r22 : re char,
+    regexp_size (re_times r11 r12) = regexp_size (re_times r21 r22) ->
     regexp_size r11 < regexp_size r21 ->
-    regexp_lt (regexp_times r11 r12) (regexp_times r21 r22).
+    regexp_lt (re_times r11 r12) (re_times r21 r22).
 
 Lemma regexp_lt_size_subsize_symprod_incl_impl : 
-  forall r r' : regexp char, 
+  forall r r' : re char, 
     regexp_lt r r' -> regexp_lt_size_subsize_lexprod' r r'.
 Proof.
 move => r r'.
@@ -252,7 +252,7 @@ apply (wf_incl _ _ _ regexp_lt_size_subsize_symprod_incl).
 exact: regexp_lt_size_subsize_lexprod'_wf.
 Defined.
 
-Definition regexps_no_c_lt (rc rc' : regexp char * char) := regexp_lt (fst rc) (fst rc').
+Definition regexps_no_c_lt (rc rc' : re char * char) := regexp_lt (fst rc) (fst rc').
 
 Lemma regexps_no_c_lt_well_founded : well_founded regexps_no_c_lt.
 Proof.
@@ -260,13 +260,13 @@ apply (wf_inverse_image _ _ _ (fun rs => fst rs)).
 apply regexp_lt_well_founded.
 Defined.
 
-Definition regexps_no_c_t (rc : regexp char * char) :=
-{ l : list (regexp char) | (forall r : regexp char, In r l -> (forall s, s_in_regexp_lang char s r -> s_in_regexp_c_lang char s (fst rc) (snd rc))) /\ (forall s, s_in_regexp_c_lang char s (fst rc) (snd rc) -> exists r, In r l /\ s_in_regexp_lang char s r) }.
+Definition regexps_no_c_t (rc : re char * char) :=
+{ l : list (re char) | (forall r : re char, In r l -> (forall s, s_in_regexp_lang char s r -> s_in_regexp_c_lang char s (fst rc) (snd rc))) /\ (forall s, s_in_regexp_c_lang char s (fst rc) (snd rc) -> exists r, In r l /\ s_in_regexp_lang char s r) }.
 
 Lemma star_times : 
   forall (s' : list char) c r',
-  s_in_regexp_lang _ (c :: s') (regexp_star r') ->
-  s_in_regexp_lang _ (c :: s') (regexp_times r' (regexp_star r')).
+  s_in_regexp_lang _ (c :: s') (re_star r') ->
+  s_in_regexp_lang _ (c :: s') (re_times r' (re_star r')).
 Proof.
 case => //=.
 - move => c r' H_s.
@@ -291,12 +291,12 @@ case => //=.
 Qed.
 
 Lemma regexp_star_split : forall r' s' c,
-  s_in_regexp_lang char (c :: s') (regexp_star r') ->
-  exists s1 s2, s' = s1 ++ s2 /\ s_in_regexp_lang char (c :: s1) r' /\ s_in_regexp_lang char s2 (regexp_star r').
+  s_in_regexp_lang char (c :: s') (re_star r') ->
+  exists s1 s2, s' = s1 ++ s2 /\ s_in_regexp_lang char (c :: s1) r' /\ s_in_regexp_lang char s2 (re_star r').
 Proof.
   intros.
   remember (c :: s') as s0.
-  remember (regexp_star r') as r0.
+  remember (re_star r') as r0.
   revert r' s' c Heqs0 Heqr0.
   induction H; intros; try congruence.
   inversion Heqr0; subst; clear Heqr0.
@@ -306,57 +306,57 @@ Proof.
     eauto.
 Qed.
 
-Definition regexps_no_c_F : forall (rc : regexp char * char),
-  (forall rc' : regexp char * char, regexps_no_c_lt rc' rc -> regexps_no_c_t rc') -> regexps_no_c_t rc.
+Definition regexps_no_c_F : forall (rc : re char * char),
+  (forall rc' : re char * char, regexps_no_c_lt rc' rc -> regexps_no_c_t rc') -> regexps_no_c_t rc.
 refine
   (fun rc regexps_no_c_rec =>
      match fst rc as r0 return _ = r0 -> _ with
-     | regexp_zero => fun H_eq => exist _ [] _
-     | regexp_unit => fun H_eq => exist _ [] _
-     | regexp_char c =>
+     | re_zero => fun H_eq => exist _ [] _
+     | re_unit => fun H_eq => exist _ [] _
+     | re_char c =>
        fun H_eq =>
          match char_eq_dec c (snd rc) with
-         | left H_a => exist _ [regexp_unit] _
+         | left H_a => exist _ [re_unit] _
          | right H_a => exist _ [] _
          end
-     | regexp_plus r1 r2 => 
+     | re_plus r1 r2 => 
        fun H_eq =>
          match regexps_no_c_rec (r1, snd rc) _, regexps_no_c_rec (r2, snd rc) _ with
          | exist l1 H_ex1, exist l2 H_ex2 => exist _ (l1 ++ l2) _
          end
-     | regexp_star r =>
+     | re_star r =>
        fun H_eq =>
          match regexps_no_c_rec (r, snd rc) _ with
          | exist l H_ex =>
-           exist _ (fold_left (fun l' r' => regexp_times r' (regexp_star r) :: l') l []) _
+           exist _ (fold_left (fun l' r' => re_times r' (re_star r) :: l') l []) _
          end
-     | regexp_times regexp_zero _ => fun H_eq => exist _ [] _
-     | regexp_times regexp_unit r2 =>
+     | re_times re_zero _ => fun H_eq => exist _ [] _
+     | re_times re_unit r2 =>
        fun H_eq =>
          match regexps_no_c_rec (r2, snd rc) _ with
          | exist l H_ex => exist _ l _
          end
-     | regexp_times (regexp_char c) r2 =>
+     | re_times (re_char c) r2 =>
        fun H_eq =>
          match char_eq_dec c (snd rc) with
          | left H_a => exist _ [r2] _
          | right H_a => exist _ [] _
          end
-     | regexp_times (regexp_plus r11 r12) r2 =>
+     | re_times (re_plus r11 r12) r2 =>
        fun H_eq =>
-         match regexps_no_c_rec (regexp_times r11 r2, snd rc) _, regexps_no_c_rec (regexp_times r12 r2, snd rc) _ with
+         match regexps_no_c_rec (re_times r11 r2, snd rc) _, regexps_no_c_rec (re_times r12 r2, snd rc) _ with
          | exist l11 H_ex11, exist l12 H_ex12 => exist _ (app l11 l12) _
          end
-     | regexp_times (regexp_times r11 r12) r2 =>
+     | re_times (re_times r11 r12) r2 =>
        fun H_eq =>
-         match regexps_no_c_rec (regexp_times r11 (regexp_times r12 r2), snd rc) _ with
+         match regexps_no_c_rec (re_times r11 (re_times r12 r2), snd rc) _ with
          | exist l H_ex => exist _ l _
          end
-     | regexp_times (regexp_star r1) r2 =>
+     | re_times (re_star r1) r2 =>
        fun H_eq =>
          match regexps_no_c_rec (r2, snd rc) _, regexps_no_c_rec (r1, snd rc) _ with
          | exist l2 H_ex2, exist l1 H_ex1 =>
-           exist _ (app l2 (fold_left (fun l r' => regexp_times r' (regexp_times (regexp_star r1) r2) :: l) l1 [])) _
+           exist _ (app l2 (fold_left (fun l r' => re_times r' (re_times (re_star r1) r2) :: l) l1 [])) _
          end
      end (refl_equal _)); destruct rc; simpl in *; subst => //=.
 - split => //.
@@ -380,7 +380,7 @@ refine
     inversion H_s; subst.
     simpl in *.
     inversion H; subst.
-    exists regexp_unit.
+    exists re_unit.
     split; first by left.
     exact: s_in_regexp_lang_unit.
 - split => //=.
@@ -504,7 +504,7 @@ refine
     + destruct s5.
       -- simpl in *.
          subst.
-         have H_sc: s_in_regexp_c_lang _ s' (regexp_times r11 r2) c.           
+         have H_sc: s_in_regexp_c_lang _ s' (re_times r11 r2) c.           
            apply s_in_regexp_c_lang_cs.
            simpl.
            have ->: c :: s' = [] ++ c :: s' by [].
@@ -517,7 +517,7 @@ refine
       -- simpl in *.
          injection H0 => H_eq H_eq_c.
          subst.
-         have H_sc: s_in_regexp_c_lang _ (s5 ++ s'0) (regexp_times r11 r2) c.
+         have H_sc: s_in_regexp_c_lang _ (s5 ++ s'0) (re_times r11 r2) c.
            apply s_in_regexp_c_lang_cs.
            simpl.
            have ->: c :: (s5 ++ s'0) = (c :: s5) ++ s'0 by [].
@@ -530,7 +530,7 @@ refine
     + destruct s5.
       -- simpl in *.
          subst.
-         have H_sc: s_in_regexp_c_lang _ s' (regexp_times r12 r2) c.
+         have H_sc: s_in_regexp_c_lang _ s' (re_times r12 r2) c.
            apply s_in_regexp_c_lang_cs.
            simpl.
            have ->: c :: s' = [] ++ c :: s' by [].
@@ -543,7 +543,7 @@ refine
       -- simpl in *.
          injection H0 => H_eq H_eq_c.
          subst.
-         have H_sc: s_in_regexp_c_lang _ (s5 ++ s'0) (regexp_times r12 r2) c.
+         have H_sc: s_in_regexp_c_lang _ (s5 ++ s'0) (re_times r12 r2) c.
            apply s_in_regexp_c_lang_cs.
            simpl.
            have ->: c :: (s5 ++ s'0) = (c :: s5) ++ s'0 by [].
@@ -577,7 +577,7 @@ refine
       destruct s'1.
       -- simpl in *.
          subst.
-         have H_sc: s_in_regexp_c_lang _ s' (regexp_times r11 (regexp_times r12 r2)) c.
+         have H_sc: s_in_regexp_c_lang _ s' (re_times r11 (re_times r12 r2)) c.
            apply s_in_regexp_c_lang_cs.
            simpl.
            have ->: c :: s' = [] ++ c :: s' by [].
@@ -586,7 +586,7 @@ refine
            by apply s_in_regexp_lang_times => //.
          by apply H_ex' in H_sc.
       -- injection H0 => H_eq H_eq_c; subst.
-         have H_sc: s_in_regexp_c_lang _ (s'1 ++ s'0) (regexp_times r11 (regexp_times r12 r2)) c.
+         have H_sc: s_in_regexp_c_lang _ (s'1 ++ s'0) (re_times r11 (re_times r12 r2)) c.
            apply s_in_regexp_c_lang_cs.
            simpl.
            have ->: c :: (s'1 ++ s'0) = [] ++ c :: (s'1 ++ s'0) by [].
@@ -597,7 +597,7 @@ refine
     + simpl in *.
       injection H0 => H_eq H_eq_c.
       subst.
-      have H_sc: s_in_regexp_c_lang _ (s0 ++ (s'1 ++ s'0)) (regexp_times r11 (regexp_times r12 r2)) c.
+      have H_sc: s_in_regexp_c_lang _ (s0 ++ (s'1 ++ s'0)) (re_times r11 (re_times r12 r2)) c.
         apply s_in_regexp_c_lang_cs.
         simpl.
         have ->: c :: (s0 ++ s'1 ++ s'0) = (c :: s0) ++ s'1 ++ s'0 by [].
@@ -659,7 +659,7 @@ refine
       apply s_in_regexp_c_lang_cs in H_s12.
       apply H_ex1' in H_s12.
       move: H_s12 => [r0 [H_in H_r0]].
-      exists (regexp_times r0 (regexp_times (regexp_star r1) r2)).
+      exists (re_times r0 (re_times (re_star r1) r2)).
       split.
       -- apply in_or_app.
          right.
@@ -702,7 +702,7 @@ refine
     apply s_in_regexp_c_lang_cs in H_s1.
     apply H_ex' in H_s1.
     move: H_s1 => [r0 [H_in H_r0]].
-    exists (regexp_times r0 (regexp_star r)).
+    exists (re_times r0 (re_star r)).
     split.
     + apply in_split in H_in.
       move: H_in => [l1 [l2 H_eq]].
@@ -716,7 +716,7 @@ refine
     + exact: s_in_regexp_lang_times.
 Defined.
 
-Definition regexps_no_c : forall (rs : regexp char * char), regexps_no_c_t rs :=
+Definition regexps_no_c : forall (rs : re char * char), regexps_no_c_t rs :=
 @well_founded_induction_type _ _ regexps_no_c_lt_well_founded regexps_no_c_t regexps_no_c_F.
 
 Definition string_lt (s s' : list char) := length s < length s'.
@@ -726,16 +726,16 @@ Proof.
 exact: (well_founded_lt_compat _ (fun s => length s)).
 Defined.
 
-Inductive accept_lt : regexp char * list char -> regexp char * list char -> Prop :=
-| accept_lt_string : forall rs rs' : regexp char * list char,
+Inductive accept_lt : re char * list char -> re char * list char -> Prop :=
+| accept_lt_string : forall rs rs' : re char * list char,
   length (snd rs) < length (snd rs') ->
   accept_lt rs rs'
-| accept_lt_regexp : forall rs rs' : regexp char * list char,
+| accept_lt_regexp : forall rs rs' : re char * list char,
   length (snd rs) = length (snd rs') ->
   regexp_lt (fst rs) (fst rs') ->
   accept_lt rs rs'.
 
-Definition accept_lt_lexprod'' (rs rs' : regexp char * list char) :=
+Definition accept_lt_lexprod'' (rs rs' : re char * list char) :=
 lexprod'' lt 
           (length (snd rs), regexp_size (fst rs), regexp_subsize (fst rs))
           (length (snd rs'), regexp_size (fst rs'), regexp_subsize (fst rs')).
@@ -774,15 +774,15 @@ apply (wf_incl _ _ _ accept_lt_lexprod''_incl).
 exact: accept_lt_lexprod''_wf.
 Defined.
 
-Definition accept_p (rs : regexp char * list char) :=
+Definition accept_p (rs : re char * list char) :=
   s_in_regexp_lang _ (snd rs) (fst rs).
 
-Definition accept_t (rs : regexp char * list char) :=
+Definition accept_t (rs : re char * list char) :=
 { accept_p rs }+{ ~ accept_p rs }.
 
-Definition accept_list_dec := @P_list_dec (regexp char) (list char) accept_lt accept_p.
+Definition accept_list_dec := @P_list_dec (re char) (list char) accept_lt accept_p.
 
-Definition accept_F : forall rs : regexp char * list char,
+Definition accept_F : forall rs : re char * list char,
   (forall rs', accept_lt rs' rs -> accept_t rs') -> accept_t rs.
   refine
     (fun rs accept_rec =>
@@ -790,10 +790,10 @@ Definition accept_F : forall rs : regexp char * list char,
        | [] =>
          fun H_eq_s =>
            match fst rs as r0 return _ = r0 -> _ with
-           | regexp_zero => fun H_eq_r => right _
-           | regexp_unit => fun H_eq_r => left _
-           | regexp_char _ => fun H_eq_r => right _
-           | regexp_plus r1 r2 =>
+           | re_zero => fun H_eq_r => right _
+           | re_unit => fun H_eq_r => left _
+           | re_char _ => fun H_eq_r => right _
+           | re_plus r1 r2 =>
              fun H_eq_r =>
                match accept_rec (r1, []) _ with
                | left H_r1 => left _
@@ -803,7 +803,7 @@ Definition accept_F : forall rs : regexp char * list char,
                  | right H_r2 => right _
                  end
                end
-           | regexp_times r1 r2 =>
+           | re_times r1 r2 =>
              fun H_eq_r =>
                match accept_rec (r1, []) _ with
                | left H_r1 =>
@@ -813,14 +813,14 @@ Definition accept_F : forall rs : regexp char * list char,
                  end
                | right H_r1 => right _
                end
-           | regexp_star r' => fun H_eq_r => left _
+           | re_star r' => fun H_eq_r => left _
            end (refl_equal _)
        | c :: s' =>
          fun H_eq_s =>
            match fst rs as r0 return _ = r0 -> _ with
-           | regexp_zero => fun H_eq_r => right _
-           | regexp_unit => fun H_eq_r => right _
-           | regexp_char c' =>
+           | re_zero => fun H_eq_r => right _
+           | re_unit => fun H_eq_r => right _
+           | re_char c' =>
              fun H_eq_r =>
                match s' as s1 return _ = s1 -> _ with
                | [] =>
@@ -831,7 +831,7 @@ Definition accept_F : forall rs : regexp char * list char,
                    end
                | _ => fun H_eq_s' => right _ 
                end (refl_equal _)
-           | regexp_plus r1 r2 =>
+           | re_plus r1 r2 =>
              fun H_eq_r =>
                match accept_rec (r1, c :: s') _ with
                | left H_r1 => left _
@@ -841,13 +841,13 @@ Definition accept_F : forall rs : regexp char * list char,
                  | right H_r2 => right _
                  end
                end
-           | regexp_times regexp_unit r2 =>
+           | re_times re_unit r2 =>
              fun H_eq_r =>
                match accept_rec (r2, c :: s') _ with
                | left H_r2 => left _
                | right H_r2 => right _
                end
-           | regexp_times (regexp_char c') r2 =>
+           | re_times (re_char c') r2 =>
              fun H_eq_r =>
                match char_eq_dec c c' with
                | left H_c =>
@@ -857,45 +857,45 @@ Definition accept_F : forall rs : regexp char * list char,
                  end
                | right H_c => right _
                end
-           | regexp_times (regexp_times r11 r12) r2 =>
+           | re_times (re_times r11 r12) r2 =>
              fun H_eq_r =>
-               match accept_rec (regexp_times r11 (regexp_times r12 r2), c :: s') _ with
+               match accept_rec (re_times r11 (re_times r12 r2), c :: s') _ with
                | left H_r => left _
                | right H_r => right _
                end
-           | regexp_times (regexp_plus r11 r12) r2 =>
+           | re_times (re_plus r11 r12) r2 =>
              fun H_eq_r =>
-               match accept_rec (regexp_times r11 r2, c :: s') _ with
+               match accept_rec (re_times r11 r2, c :: s') _ with
                | left H_r11 => left _
                | right H_r11 =>
-                 match accept_rec (regexp_times r12 r2, c :: s') _ with
+                 match accept_rec (re_times r12 r2, c :: s') _ with
                  | left H_r12 => left _
                  | right H_r12 => right _
                  end
                end
-           | regexp_times (regexp_star r1) r2 =>
+           | re_times (re_star r1) r2 =>
              fun H_eq_r =>
               match accept_rec (r2, c :: s') _ with
               | left H_r2 => left _
               | right H_r2 =>
                 match regexps_no_c (r1, c) with
                 | exist l H_l =>
-                  match @accept_list_dec rs accept_rec (fun r0 => (regexp_times r0 (regexp_times (regexp_star r1) r2), s')) _ l with
+                  match @accept_list_dec rs accept_rec (fun r0 => (re_times r0 (re_times (re_star r1) r2), s')) _ l with
                   | inleft (exist _ H_ex) => left _ 
                   | inright H_l' => right _
                   end
                 end 
               end
-           | regexp_star r' =>
+           | re_star r' =>
              fun H_eq_r =>
                match regexps_no_c (r', c) with
                | exist l H_l => 
-                 match @accept_list_dec rs accept_rec (fun r0 => (regexp_times r0 (regexp_star r'), s')) _ l with
+                 match @accept_list_dec rs accept_rec (fun r0 => (re_times r0 (re_star r'), s')) _ l with
                  | inleft (exist _ H_ex) => left _
                  | inright H_l' => right _ 
                  end
                end                       
-           | regexp_times regexp_zero _ => 
+           | re_times re_zero _ => 
              fun H_eq_r => right _
            end (refl_equal _)
        end (refl_equal _)); destruct rs; simpl in *; subst.
@@ -1073,8 +1073,8 @@ Definition accept_F : forall rs : regexp char * list char,
   have H_s' := star_times H_s.
   have [s1 [s2 [H_eq [H_s1 H_s2]]]] := regexp_star_split H_s.
   subst.
-  have H_c_l: s_in_regexp_c_lang _ (s1 ++ s2) (regexp_times r' (regexp_star r')) c by apply s_in_regexp_c_lang_cs.
-  have H_s0: forall r, (forall s, s_in_regexp_c_lang _ s r' c -> s_in_regexp_lang _ s r) -> s_in_regexp_lang _ (c :: (s1 ++ s2)) (regexp_times (regexp_char c) (regexp_times r (regexp_star r'))).
+  have H_c_l: s_in_regexp_c_lang _ (s1 ++ s2) (re_times r' (re_star r')) c by apply s_in_regexp_c_lang_cs.
+  have H_s0: forall r, (forall s, s_in_regexp_c_lang _ s r' c -> s_in_regexp_lang _ s r) -> s_in_regexp_lang _ (c :: (s1 ++ s2)) (re_times (re_char c) (re_times r (re_star r'))).
     move => r H_sc.
     have ->: c :: (s1 ++ s2) = [c] ++ (s1 ++ s2) by [].
     apply s_in_regexp_lang_times; first by apply s_in_regexp_lang_char.
@@ -1092,7 +1092,7 @@ Definition accept_F : forall rs : regexp char * list char,
   by apply s_in_regexp_lang_times.
 Defined.
 
-Definition accept : forall (rs : regexp char * list char), accept_t rs :=
+Definition accept : forall (rs : re char * list char), accept_t rs :=
 @well_founded_induction_type _ _ accept_lt_well_founded accept_t accept_F.
 
 End Accept.
