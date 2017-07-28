@@ -1,11 +1,11 @@
+Require Import regexp.
+Require Import regexp_metatheory.
+
 From mathcomp
 Require Import all_ssreflect.
 
-From RegLang Require Import setoid_leq misc languages dfa nfa.
+From RegLang Require Import setoid_leq misc nfa languages.
 From RegLang Require Import regexp.
-
-Require Import regexp.
-Require Import regexp_metatheory.
 
 Set Implicit Arguments.
 Unset Strict Implicit.
@@ -19,7 +19,11 @@ Variable char_eq_dec : forall c0 c1 : char, {c0 = c1}+{c0 <> c1}.
 Definition char_eqMixin := EqMixin (compareP char_eq_dec).
 Canonical Structure char_eqType := EqType _ char_eqMixin.
 
-Check Atom.
+Lemma re_eq_dec (e1 e2 : re char) : {e1 = e2} + {e1 <> e2}.
+Proof. decide equality; apply: eq_comparable. Qed.
+
+Definition re_eqMixin := EqMixin (compareP re_eq_dec).
+Canonical Structure re_eqType := EqType _ re_eqMixin.
 
 Fixpoint regexp2re (r : regexp char_eqType) : re char :=
   match r with
@@ -267,6 +271,78 @@ elim/re_lang_ind => //=.
   * exact: IH2.
 Qed.
 
+Definition residuals_t (rc : regexp char_eqType * char) :=
+{ l : seq (regexp char_eqType) | 
+  (forall r : regexp char_eqType, r \in l -> (forall w, w \in re_lang r -> w \in residual (snd rc) (re_lang (fst rc)))) /\
+  (forall w, w \in residual (snd rc) (re_lang (fst rc)) -> exists r, r \in l /\ w \in re_lang r) }.
+
+Lemma s_in_regexp_c_lang_residual : forall r w c',
+  s_in_regexp_c_lang char w (regexp2re r) c' ->
+  w \in residual c' (re_lang r).
+Proof.
+move => r w c' H_c.
+inversion H_c; subst.
+rewrite /= in H.
+by apply regexp_re_in'.
+Qed.
+
+Lemma residual_s_in_regexp_c_lang : forall r w c',
+  w \in residual c' (re_lang r) ->
+  s_in_regexp_c_lang char w (regexp2re r) c'.
+Proof.
+move => r w c' H_c.
+apply s_in_regexp_c_lang_cs.
+rewrite /=.
+by apply regexp_in_re.
+Qed.
+
+Definition residual : forall (rc : regexp char_eqType * char), residuals_t rc.
+refine
+  (fun rc => 
+     match regexps_no_c char_eq_dec (regexp2re (fst rc), snd rc) with
+     | exist l H_l => exist _ (map re2regexp l) _
+     end); destruct rc.
+split.
+- move => r' H_in /= w H_w.
+  rewrite /residual.
+  rewrite inE.
+  move: H_l => [H_l H_l'] {H_l'}.
+  rewrite /= in H_l.
+  apply s_in_regexp_c_lang_residual.
+  apply regexp_in_re in H_w.
+  apply (H_l (regexp2re r')) => //.
+  move: H_in.
+  move/mapP => [r0 H_in] H_eq.
+  rewrite H_eq {H_eq}.
+  rewrite cancel_re_regexp.
+  move: H_in.
+  clear.
+  elim: l => //.
+  move => r' l IH.
+  rewrite inE.
+  move/orP => [H_in|H_in].
+  * by left; move/eqP: H_in.
+  * right; exact: IH.
+- move => w /= H_in.
+  apply residual_s_in_regexp_c_lang in H_in.
+  move: H_l => [H_l' H_l] {H_l'}.
+  rewrite /= in H_l.
+  apply H_l in H_in.
+  move: H_in => [r' [H_in H_r']].
+  exists (re2regexp r').
+  split; last exact: regexp_re_in.
+  apply List.in_split in H_in.
+  rewrite /= in H_in.
+  move: H_in => [l1 [l2 H_eq]].
+  rewrite H_eq /=.  
+  rewrite map_cat mem_cat.
+  apply/orP.
+  right.
+  rewrite inE.
+  apply/orP.
+  by left.
+Defined.
+
 Definition accept_rl_p (rw : regexp char_eqType * seq char) :=
    (snd rw) \in re_lang (fst rw).
 
@@ -289,3 +365,5 @@ refine
   rewrite /accept_rl_p /= in H_acc.
   exact: regexp_in_re.
 Defined.
+
+End RegLangExp.
