@@ -31,7 +31,7 @@ let main () =
   try
     let re = Parser.main Lexer.token buf in
     (*Printf.printf "%s\n" (string_of_regexp re)*)
-    let mt = accept (re, char_list_of_string s) in
+    let mt = accept (=) (re, char_list_of_string s) in
     Printf.printf "%b\n" mt
   with
   | Lexer.Error msg ->

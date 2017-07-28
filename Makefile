@@ -28,14 +28,11 @@ default: Makefile.coq
 matcher.native: $(ACCEPTMLFILES) matcher.ml parser.mly lexer.mll
 	$(OCAMLBUILD) matcher.native
 
-Makefile.coq: $(VFILES) parser.v
+Makefile.coq: $(VFILES)
 	coq_makefile -f _CoqProject -o Makefile.coq -no-install \
           -extra '$(ACCEPTMLFILES)' \
             'accept_extrocaml.v regexp_metatheory.vo' \
-            '$$(COQC) $$(COQDEBUG) $$(COQFLAGS) accept_extrocaml.v' \
-           -extra '$(PARSERMLFILES)' \
-            'parser_extrocaml.v parser.vo' \
-            '$$(COQC) $$(COQDEBUG) $$(COQFLAGS) parser_extrocaml.v'
+            '$$(COQC) $$(COQDEBUG) $$(COQFLAGS) accept_extrocaml.v'
 
 parser.v: parser.vy
 	$(MENHIR) parser.vy

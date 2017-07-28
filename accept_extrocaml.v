@@ -1,11 +1,9 @@
-Require Import String.
 Require Import List.
 
 Require Import regexp.
 Require Import regexp_metatheory.
 
 Require Import ExtrOcamlBasic.
-Require Import ExtrOcamlString.
 
 Extract Inlined Constant fst => "fst".
 Extract Inlined Constant snd => "snd".

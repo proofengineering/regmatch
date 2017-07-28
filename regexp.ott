@@ -1,31 +1,34 @@
 embed
 {{ coq
-Require Export Ascii.
-Require Export String.
+Import ListNotations.
 
-Open Scope string_scope.
+Section RegExp.
+
+Variable char : Type.
 }}
-metavar a ::=
+metavar c ::=
           {{ lex alphanum }}
           {{ com character }}
-          {{ coq ascii }}
+          {{ coq char }}
 grammar
 s :: s_ ::=
   {{ com string }}
-  {{ coq string }}
+  {{ coq list char }}
+  {{ coq-universe Type }}
   | e :: M :: empty
-    {{ coq "" }}
+    {{ coq [] }}
     {{ tex \epsilon }}
-  | a :: M :: char
-    {{ coq (String [[a]] "") }}
-  | s s' :: M :: concat_2
+  | c :: M :: char
+    {{ coq ([[c]] :: []) }}
+  | s s' :: M :: concat
     {{ coq ([[s]] ++ [[s']]) }}
 
 regexp, r :: regexp_ ::=
   {{ com regexp }}
+  {{ coq-universe Type }}
   | 0 :: :: zero
   | 1 :: :: unit
-  | a :: :: char
+  | c :: :: char
   | r + r' :: :: plus
   | r r' :: :: times
   | r * :: :: star
@@ -49,7 +52,7 @@ defn
  e in L ( 1 )
 
  ------------ :: char
- a in L ( a )
+ c in L ( c )
 
  s in L ( r1 )
  ------------------ :: plus_1
@@ -76,9 +79,22 @@ defns
   regexp_ins_c :: '' ::=
 
 defn
- s in L ( r ; a ) :: :: s_in_regexp_c_lang :: s_in_regexp_c_lang_
+ s in L ( r ; c ) :: :: s_in_regexp_c_lang :: s_in_regexp_c_lang_
  {{ com string in regexp c language }} by 
 
- a s in L ( r )
+ c s in L ( r )
  ----------------- :: cs
- s in L ( r ; a )
+ s in L ( r ; c )
+
+embed
+{{ coq
+
+End RegExp.
+
+Arguments regexp_zero [char].
+Arguments regexp_unit [char].
+Arguments regexp_char [char] _.
+Arguments regexp_plus [char] _ _.
+Arguments regexp_times [char] _ _.
+Arguments regexp_star [char] _.
+}}

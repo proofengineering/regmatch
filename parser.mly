@@ -11,7 +11,7 @@
 %left TIMES
 
 %start main
-%type <Accept.regexp> main
+%type <char Accept.regexp> main
 
 %%
 
