@@ -13,11 +13,7 @@ Unset Printing Implicit Defensive.
 
 Section RegLangExp.
 
-Variable char : Type.
-Variable char_eq_dec : forall c0 c1 : char, {c0 = c1}+{c0 <> c1}.
-
-Definition char_eqMixin := EqMixin (compareP char_eq_dec).
-Canonical Structure char_eqType := EqType _ char_eqMixin.
+Variable char : eqType.
 
 Lemma re_eq_dec (e1 e2 : re char) : {e1 = e2} + {e1 <> e2}.
 Proof. decide equality; apply: eq_comparable. Qed.
@@ -25,7 +21,7 @@ Proof. decide equality; apply: eq_comparable. Qed.
 Definition re_eqMixin := EqMixin (compareP re_eq_dec).
 Canonical Structure re_eqType := EqType _ re_eqMixin.
 
-Fixpoint regexp2re (r : regexp char_eqType) : re char :=
+Fixpoint regexp2re (r : regexp char) : re char :=
   match r with
   | Void => re_zero
   | Eps => re_unit
@@ -35,7 +31,7 @@ Fixpoint regexp2re (r : regexp char_eqType) : re char :=
   | Conc r1 r2 => re_times (regexp2re r1) (regexp2re r2)
   end.
 
-Fixpoint re2regexp (r : re char) : regexp char_eqType :=
+Fixpoint re2regexp (r : re char) : regexp char :=
   match r with
   | re_zero => Void
   | re_unit => Eps
@@ -43,6 +39,14 @@ Fixpoint re2regexp (r : re char) : regexp char_eqType :=
   | re_star r' => Star (re2regexp r')
   | re_plus r1 r2 => Plus (re2regexp r1) (re2regexp r2)
   | re_times r1 r2 => Conc (re2regexp r1) (re2regexp r2)
+  end.
+
+Fixpoint re_stars (e : regexp char) : nat :=
+  match e with
+  | Star s => (re_stars s).+1
+  | Plus s t => ((re_stars s)+(re_stars t)).+1
+  | Conc s t => ((re_stars s)+(re_stars t)).+1
+  | _ => 0
   end.
 
 Lemma cancel_re_regexp : cancel re2regexp regexp2re.
@@ -78,8 +82,7 @@ revert r w Heqr0 Heqw0.
 induction H => //=.
 - move => r w H_eq H_eq'.
   subst.
-  compute.
-  by case char_eq_dec.
+  by rewrite inE.
 - move => r w H_eq H_eq'.
   subst.    
   apply/plusP; left.
@@ -103,7 +106,7 @@ induction H => //=.
   * exact: IHs_in_regexp_lang2.
 Qed.
 
-Lemma regexp_re_in' : forall (r : regexp char_eqType) (w : seq char), s_in_regexp_lang _ w (regexp2re r) -> w \in re_lang r.
+Lemma regexp_re_in' : forall (r : regexp char) (w : seq char), s_in_regexp_lang _ w (regexp2re r) -> w \in re_lang r.
 Proof.
 move => r w H.
 remember (regexp2re r) as r0.
@@ -119,8 +122,7 @@ induction H => //=.
   rewrite /= in H_eq.
   injection H_eq => H_eq'.
   subst.
-  compute.
-  by case char_eq_dec.
+  by rewrite inE.
 - move => r w H_eq H_eq'.
   subst.
   destruct r => //.
@@ -235,7 +237,7 @@ elim: r w => //=.
   * exact: IH2.
 Qed.
 
-Lemma regexp_in_re : forall (r : regexp char_eqType) (w : seq char), w \in re_lang r  -> s_in_regexp_lang _ w (regexp2re r).
+Lemma regexp_in_re : forall (r : regexp char) (w : seq char), w \in re_lang r  -> s_in_regexp_lang _ w (regexp2re r).
 Proof.
 move => r w H_st.
 remember r as r0.
@@ -271,9 +273,9 @@ elim/re_lang_ind => //=.
   * exact: IH2.
 Qed.
 
-Definition residuals_t (rc : regexp char_eqType * char) :=
-{ l : seq (regexp char_eqType) | 
-  (forall r : regexp char_eqType, r \in l -> (forall w, w \in re_lang r -> w \in residual (snd rc) (re_lang (fst rc)))) /\
+Definition residuals_t (rc : regexp char * char) :=
+{ l : seq (regexp char) |
+  (forall r : regexp char, r \in l -> (forall w, w \in re_lang r -> w \in residual (snd rc) (re_lang (fst rc)))) /\
   (forall w, w \in residual (snd rc) (re_lang (fst rc)) -> exists r, r \in l /\ w \in re_lang r) }.
 
 Lemma s_in_regexp_c_lang_residual : forall r w c',
@@ -296,10 +298,10 @@ rewrite /=.
 by apply regexp_in_re.
 Qed.
 
-Definition residual : forall (rc : regexp char_eqType * char), residuals_t rc.
+Definition residuals : forall (rc : regexp char * char), residuals_t rc.
 refine
   (fun rc => 
-     match regexps_no_c char_eq_dec (regexp2re (fst rc), snd rc) with
+     match regexps_no_c (@eq_comparable char) (regexp2re (fst rc), snd rc) with
      | exist l H_l => exist _ (map re2regexp l) _
      end); destruct rc.
 split.
@@ -343,16 +345,16 @@ split.
   by left.
 Defined.
 
-Definition accept_rl_p (rw : regexp char_eqType * seq char) :=
+Definition accept_rl_p (rw : regexp char * seq char) :=
    (snd rw) \in re_lang (fst rw).
 
-Definition accept_rl_t (rs : regexp char_eqType * seq char) :=
+Definition accept_rl_t (rs : regexp char * seq char) :=
 { accept_rl_p rs }+{ ~ accept_rl_p rs }.
 
-Definition accept_rl : forall (rw : regexp char_eqType * seq char), accept_rl_t rw.
+Definition accept_rl : forall (rw : regexp char * seq char), accept_rl_t rw.
 refine
   (fun rw => 
-     match accept char_eq_dec (regexp2re (fst rw), snd rw) with
+     match accept (@eq_comparable char) (regexp2re (fst rw), snd rw) with
      | left H_l => left _
      | right H_r => right _
      end); destruct rw.
@@ -367,3 +369,50 @@ refine
 Defined.
 
 End RegLangExp.
+
+Section RegLangNFA.
+
+Variable char : finType.
+
+Definition nfa_void : nfa char :=
+  {| nfa_s := @set0 char; nfa_fin := set0; nfa_trans p a q := false |}.
+
+Lemma nfa_void_correct: nfa_lang (nfa_void) =i pred0.
+Proof.
+  move => w. apply/idP.
+  rewrite /= inE => H_e.
+  move/exists_inP: H_e => [x H_e] H_v.
+  move: H_e.
+  by rewrite inE.
+Qed.
+
+(*
+
+Definition enum_nfa : nfa char :=
+foldl (fun n c => nfa_plus (nfa_char c) n) nfa_void (enum char).
+
+Inductive regexp_residual_lt : regexp char -> regexp char -> Prop :=
+| regexp_residual_lt_stars : forall r r' : regexp char,
+  re_stars r < re_stars r' ->
+  regexp_residual_lt r r'
+| regexp_residual_lt_size : forall r r' : regexp char,
+  re_stars r = re_stars r' ->
+  re_size r < re_size r' ->
+  regexp_residual_lt r r'.
+
+
+Eval compute in [set tt].
+
+Print foldr.
+
+Fixpoint enum_fold (f : regexp char -> nfa) (s : seq char) : nfa :=
+if s is x :: s' then 
+
+Fixpoint nfa_residual (r : regexp char) : nfa :=
+
+Check enum char.
+
+Check nfa_char.
+*)
+
+End RegLangNFA.
