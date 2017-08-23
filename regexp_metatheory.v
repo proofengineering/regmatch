@@ -16,48 +16,6 @@ Set Implicit Arguments.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
-Section FoldLeftFun.
-
-Variable A B : Type.
-Variable f : A -> B.
-
-Lemma fold_left_f_list_app :
-  forall l1 l0,
-    fold_left (fun (l : list B) (a : A) => f a :: l) l1 l0 =
-    (fold_left (fun (l : list B) (a : A) => f a :: l) l1 []) ++ l0.
-Proof.
-elim => //=.
-move => a l IH l'.
-rewrite IH /=.
-have IH' := IH [f a].
-rewrite IH' /=.
-set fl := fold_left _ _ _.
-by rewrite -app_assoc app_assoc.
-Qed.
-
-Lemma fold_left_list_f_in : 
-  forall l1 a,
-    In a (fold_left (fun (l : list B) (a' : A) => f a' :: l) l1 []) ->
-    exists a0, In a0 l1 /\ a = f a0.
-Proof.
-elim => //=.
-move => a l IH a' H_in.
-rewrite fold_left_f_list_app in H_in.
-apply in_app_or in H_in.
-case: H_in => H_in.
-* have [a0 [H_in' H_eq]] := IH _ H_in.
-  subst.
-  exists a0.
-  split => //.
-  by right.
-* case: H_in => H_eq //.
-  exists a.
-  split => //.
-  by left.
-Qed.
-
-End FoldLeftFun.
-
 Section PListDec.
 
 Variables A B : Type.
@@ -328,7 +286,7 @@ refine
        fun H_eq =>
          match regexps_no_c_rec (r, snd rc) _ with
          | exist l H_ex =>
-           exist _ (fold_left (fun l' r' => re_times r' (re_star r) :: l') l []) _
+           exist _ (map (fun r' => re_times r' (re_star r)) l) _
          end
      | re_times re_zero _ => fun H_eq => exist _ [] _
      | re_times re_unit r2 =>
@@ -356,7 +314,7 @@ refine
        fun H_eq =>
          match regexps_no_c_rec (r2, snd rc) _, regexps_no_c_rec (r1, snd rc) _ with
          | exist l2 H_ex2, exist l1 H_ex1 =>
-           exist _ (app l2 (fold_left (fun l r' => re_times r' (re_times (re_star r1) r2) :: l) l1 [])) _
+           exist _ (app l2 (map (fun r' => re_times r' (re_times (re_star r1) r2)) l1)) _
          end
      end (refl_equal _)); destruct rc; simpl in *; subst => //=.
 - split => //.
@@ -625,8 +583,8 @@ refine
       have ->: c :: s' = [] ++ c :: s' by [].
       apply s_in_regexp_lang_times => //.
       exact: s_in_regexp_lang_star_1.
-    + apply fold_left_list_f_in in H_in.
-      move: H_in => [r0 [H_in' H_eq_r0]].
+    + apply in_map_iff in H_in.
+      move: H_in => [r0 [H_eq_r0 H_in']].
       subst.
       inversion H_s'; subst.
       have H_s0 := H_ex1 _ H_in' _ H2.
@@ -667,14 +625,12 @@ refine
          move: H_in => [l'2 [l'3 H_eq]].
          subst.
          move {H_ex1 H_ex1'}.
-         elim: l'2 => //=.
-           rewrite fold_left_f_list_app /=.
-           apply in_or_app.
-           by right; left.
-         move => r'0 l' IH.
-         rewrite fold_left_f_list_app.
+         elim: l'2 => //=; first by left.
+         move => r'0 l'.
+         rewrite map_app /= => H_in.
+         right.
          apply in_or_app.
-         by left.
+         by right; left.
       -- rewrite -app_assoc.
          apply s_in_regexp_lang_times => //.
          exact: s_in_regexp_lang_times.
@@ -684,8 +640,8 @@ refine
   split.
   * move => r' H_in s' H_s'.
     apply: s_in_regexp_c_lang_cs => /=.
-    apply fold_left_list_f_in in H_in.
-    move: H_in => [r0 [H_in' H_eq_r0]].
+    apply in_map_iff in H_in.
+    move: H_in => [r0 [H_eq_r0 H_in']].
     subst.
     inversion_clear H_s'; subst.
     have H_ex0 := H_ex _ H_in' _ H.
@@ -707,12 +663,10 @@ refine
     + apply in_split in H_in.
       move: H_in => [l1 [l2 H_eq]].
       subst.
-      elim: l1 {H_ex' H_ex} => /=.
-        rewrite fold_left_f_list_app /=.
-        by apply in_or_app; right; left.
-      move => r1 l IH.
-      rewrite fold_left_f_list_app /=.
-      by apply in_or_app; left.
+      elim: l1 {H_ex' H_ex} => /=; first by left.
+      move => r1 l.
+      rewrite map_app /= => H_in.
+      by right.
     + exact: s_in_regexp_lang_times.
 Defined.
 
