@@ -2,18 +2,18 @@ open Accept
 
 let rec string_of_regexp r =
 match r with
-| Regexp_zero -> "[zero]"
-| Regexp_unit -> "[unit]"
-| Regexp_char c -> Printf.sprintf "%c" c
-| Regexp_plus (r1, r2) ->
+| Re_zero -> "[zero]"
+| Re_unit -> "[unit]"
+| Re_char c -> Printf.sprintf "%c" c
+| Re_plus (r1, r2) ->
   let s1 = string_of_regexp r1 in
   let s2 = string_of_regexp r2 in
   Printf.sprintf "(%s|%s)" s1 s2
-| Regexp_times (r1, r2) ->
+| Re_times (r1, r2) ->
   let s1 = string_of_regexp r1 in
   let s2 = string_of_regexp r2 in
   Printf.sprintf "(%s%s)" s1 s2
-| Regexp_star r ->
+| Re_star r ->
   let s = string_of_regexp r in
   Printf.sprintf "(%s*)" s
 
