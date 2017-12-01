@@ -16,6 +16,7 @@ depends: [
   "coq-mathcomp-ssreflect" {>= "1.6.1" & < "1.7~"}
   "coq-ott" {>= "0.27"}
   "ott" {>= "0.27"}
+  "menhir" {>= "20171013"}
   "ocamlbuild" {build}
   "ocamlfind" {build}
 ]
