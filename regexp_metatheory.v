@@ -1,4 +1,4 @@
-Require Import regexp.
+Require Import RegExp.regexp.
 
 Require Import mathcomp.ssreflect.ssreflect.
 

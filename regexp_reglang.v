@@ -1,5 +1,5 @@
-Require Import regexp.
-Require Import regexp_metatheory.
+Require Import RegExp.regexp.
+Require Import RegExp.regexp_metatheory.
 
 From mathcomp
 Require Import all_ssreflect.
