@@ -25,6 +25,8 @@ PARSERMLFILES = parser.ml parser.mli
 default: Makefile.coq
 	$(MAKE) -f Makefile.coq
 
+matcher: matcher.native
+
 matcher.native: $(ACCEPTMLFILES) matcher.ml parser.mly lexer.mll
 	$(OCAMLBUILD) matcher.native
 
@@ -56,6 +58,6 @@ clean:
 	rm -f Makefile.coq $(VFILES) parser.v
 	$(OCAMLBUILD) -clean
 
-.PHONY: default clean
+.PHONY: default clean matcher
 .NOTPARALLEL: $(ACCEPTMLFILES)
 .NOTPARALLEL: $(PARSERMLFILES)
