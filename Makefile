@@ -55,7 +55,7 @@ $(PDFFILES): $(TEXFILES)
 clean:
 	if [ -f Makefile.coq ]; then \
 	  $(MAKE) -f Makefile.coq cleanall; fi
-	rm -f Makefile.coq $(VFILES) parser.v
+	rm -f Makefile.coq Makefile.coq.conf $(VFILES) parser.v
 	$(OCAMLBUILD) -clean
 
 .PHONY: default clean matcher

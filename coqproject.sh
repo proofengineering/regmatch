@@ -3,7 +3,7 @@
 ### coqproject.sh
 ### Creates a _CoqProject file, including external dependencies.
 
-### See README.md for a description.
+### See the README.md file for a description.
 
 ## Implementation
 
@@ -27,7 +27,7 @@ function dep_dirs_lines(){
       if [ $dep_dir = "." ]; then
         LINE="-Q $1 $namespace"
       else
-	LINE="-Q $1/$dep_dir $namespace"
+        LINE="-Q $1/$dep_dir $namespace"
       fi
       echo $LINE >> $COQPROJECT_TMP
   done
@@ -74,6 +74,10 @@ for dir in ${DIRS[@]}; do
     echo $LINE >> $COQPROJECT_TMP
 done
 
+if [ ! "x${ARG}" = "x" ]; then
+    echo "-arg \"${ARG}\"" >> $COQPROJECT_TMP
+fi
+
 for dir in ${DIRS[@]}; do
     echo >> $COQPROJECT_TMP
     find $dir -iname '*.v' -not -name '*\#*'  >> $COQPROJECT_TMP
@@ -85,6 +89,5 @@ for extra in ${EXTRA[@]}; do
         echo $extra >> $COQPROJECT_TMP
     fi
 done
-
 
 mv $COQPROJECT_TMP _CoqProject
