@@ -2,6 +2,6 @@
 
 NAMESPACE__="RegExp"
 DEPS=(Ott RegLang)
-CANARIES=("RegLang.regexp" "RegLang must be installed" "Ott.ott_list_core" "Ott auxiliary library must be installed" "mathcomp.ssreflect.ssreflect" "mathcomp-ssreflect must be installed")
+CANARIES=("Ott.ott_list_core" "Ott auxiliary library must be installed" "mathcomp.ssreflect.ssreflect" "mathcomp-ssreflect must be installed")
 EXTRA=(regexp.v)
 source coqproject.sh
