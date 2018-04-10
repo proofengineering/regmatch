@@ -5,9 +5,7 @@ Require Import mathcomp.ssreflect.ssreflect.
 Require Import List.
 Require Import Relation_Definitions.
 Require Import Relation_Operators.
-Require Import Wf_nat.
 Require Import Wellfounded.
-Require Import Wellfounded.Lexicographic_Product.
 Require Import Omega.
 
 Import ListNotations.
@@ -672,13 +670,6 @@ Defined.
 
 Definition regexps_no_c : forall (rs : re char * char), regexps_no_c_t rs :=
 @well_founded_induction_type _ _ regexps_no_c_lt_well_founded regexps_no_c_t regexps_no_c_F.
-
-Definition string_lt (s s' : list char) := length s < length s'.
-
-Lemma string_lt_well_founded : well_founded string_lt.
-Proof.
-exact: (well_founded_lt_compat _ (fun s => length s)).
-Defined.
 
 Inductive accept_lt : re char * list char -> re char * list char -> Prop :=
 | accept_lt_string : forall rs rs' : re char * list char,
