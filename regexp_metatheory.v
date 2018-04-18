@@ -301,7 +301,7 @@ refine
      | re_times (re_plus r11 r12) r2 =>
        fun H_eq =>
          match regexps_no_c_rec (re_times r11 r2, snd rc) _, regexps_no_c_rec (re_times r12 r2, snd rc) _ with
-         | exist l11 H_ex11, exist l12 H_ex12 => exist _ (app l11 l12) _
+         | exist l11 H_ex11, exist l12 H_ex12 => exist _ (l11 ++ l12) _
          end
      | re_times (re_times r11 r12) r2 =>
        fun H_eq =>
@@ -312,7 +312,7 @@ refine
        fun H_eq =>
          match regexps_no_c_rec (r2, snd rc) _, regexps_no_c_rec (r1, snd rc) _ with
          | exist l2 H_ex2, exist l1 H_ex1 =>
-           exist _ (app l2 (map (fun r' => re_times r' (re_times (re_star r1) r2)) l1)) _
+           exist _ (l2 ++ (map (fun r' => re_times r' (re_times (re_star r1) r2)) l1)) _
          end
      end (refl_equal _)); destruct rc; simpl in *; subst => //=.
 - split => //.
