@@ -1,6 +1,6 @@
 include Makefile.detect-coq-version
 
-ifeq (,$(filter $(COQVERSION),8.5 8.6 8.7 trunk))
+ifeq (,$(filter $(COQVERSION),8.5 8.6 8.7 8.8 trunk))
 $(error "only compatible with Coq version 8.5 or later")
 endif
 
@@ -31,7 +31,7 @@ matcher.native: $(ACCEPTMLFILES) matcher.ml parser.mly lexer.mll
 	$(OCAMLBUILD) matcher.native
 
 Makefile.coq: $(VFILES)
-	coq_makefile -f _CoqProject -o Makefile.coq -install none \
+	coq_makefile -f _CoqProject -o Makefile.coq \
           -extra '$(ACCEPTMLFILES)' \
             'accept_extrocaml.v regexp_metatheory.vo' \
             '$$(COQC) $$(COQDEBUG) $$(COQFLAGS) accept_extrocaml.v'
@@ -52,9 +52,8 @@ $(PDFFILES): $(TEXFILES)
 	$(PDFLATEX) $<
 	$(PDFLATEX) $<
 
-clean:
-	if [ -f Makefile.coq ]; then \
-	  $(MAKE) -f Makefile.coq cleanall; fi
+clean: Makefile.coq
+	$(MAKE) -f Makefile.coq cleanall
 	rm -f Makefile.coq Makefile.coq.conf $(VFILES) parser.v
 	$(OCAMLBUILD) -clean
 
