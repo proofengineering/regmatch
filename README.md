@@ -1,17 +1,17 @@
 Regexp
 ======
 
-A regexp matcher, proved correct in the Coq proof assistant.
+A regexp matcher as defined in the paper [Proof-directed debugging revisited](https://www.cambridge.org/core/journals/journal-of-functional-programming/article/educational-pearl-proof-directed-debugging-revisited-for-a-first-order-version/F7CC0A759398A52C35F21F13236C0E00), proved correct in the Coq proof assistant.
 
 Requirements
 ------------
 
 Definitions and proofs:
 
-- [`Coq 8.6.1`](https://coq.inria.fr/coq-86) or [`Coq 8.7`](https://coq.inria.fr/coq-87)
-- [`Mathematical Components 1.6.4`](http://math-comp.github.io/math-comp/) (`ssreflect`)
-- [`Ott 0.27`](https://github.com/ott-lang/ott) (and its Coq library)
-- [`RegLang`](https://github.com/proofengineering/reglang)
+- [`Coq 8.7`](https://coq.inria.fr/coq-87) or [`Coq 8.7`](https://coq.inria.fr/download)
+- [`Mathematical Components 1.6.4 or 1.7.0`](http://math-comp.github.io/math-comp/) (`ssreflect`)
+- [`Ott 0.28`](https://github.com/ott-lang/ott) (and its Coq library)
+- [`RegLang`](https://github.com/chdoc/coq-reglang)
 
 Executable matcher:
 
