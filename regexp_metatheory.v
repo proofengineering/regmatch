@@ -767,7 +767,7 @@ Definition accept_F : forall rs : re char * list char,
            | re_unit => fun H_eq_r => right _
            | re_char c' =>
              fun H_eq_r =>
-               match s' as s1 return _ = s1 -> _ with
+               match s' as s1 return s' = s1 -> _ with
                | [] =>
                  fun H_eq_s' =>
                    match char_eq_dec c c' with
@@ -877,7 +877,7 @@ Definition accept_F : forall rs : re char * list char,
 - by move => H_m; inversion H_m.
 - exact: s_in_regexp_lang_char.
 - by move => H_m; inversion H_m; subst.
-- by move => H_m; inversion H_m; subst.
+- by move => H_m; inversion H_m.
 - apply accept_lt_regexp => //.
   apply regexp_lt_lt.
   rewrite /=.

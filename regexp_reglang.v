@@ -529,7 +529,7 @@ Fixpoint nfa_constr_l (c : char) (l : seq (regexp char)) :
         (forall w, w \in nfa_lang N -> exists w', w = c :: w' /\ exists r, r \in l /\ w' \in re_lang r) }.
 refine
   (fun nfa_constr_rec =>
-     match l as l0 return _ = l0 -> _ with
+     match l as l0 return l = l0 -> _ with
      | [::] => fun H_eq => exist _ nfa_void _
      | r :: l' => 
        fun H_eq =>

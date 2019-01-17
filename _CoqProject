@@ -1,0 +1,11 @@
+-Q . RegExp
+
+-arg -w -arg -notation-overridden
+-arg -w -arg -local-declaration
+-arg -w -arg -redundant-canonical-projection
+-arg -w -arg -projection-no-head-constant
+
+accept_extrocaml.v
+regexp_reglang.v
+regexp_metatheory.v
+regexp.v

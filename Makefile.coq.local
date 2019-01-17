@@ -1,0 +1,13 @@
+include Makefile.ml-files
+
+$(ACCEPTML): accept_extrocaml.v regexp_metatheory.vo
+	$(COQC) $(COQDEBUG) $(COQFLAGS) $(COQLIBS) accept_extrocaml.v
+
+regexp.v: regexp.ott
+	ott -o $@ -coq_expand_list_types false $<
+
+parser.v: parser.vy
+	menhir --coq --coq-no-complete $<
+
+clean::
+	rm -f $(ACCEPTML) regexp.v parser.v

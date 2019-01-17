@@ -11,6 +11,7 @@ _build
 regexp.v
 accept.ml
 accept.mli
+matcher
 matcher.native
 regexp.log
 regexp.tex
@@ -19,4 +20,3 @@ regexp.pdf
 parser.v
 parser.ml
 parser.mli
-_CoqProject

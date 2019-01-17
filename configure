@@ -1,8 +1,0 @@
-#!/usr/bin/env bash
-
-NAMESPACE__="RegExp"
-DEPS=(Ott RegLang)
-CANARIES=("Ott.ott_list_core" "Ott auxiliary library must be installed" "mathcomp.ssreflect.ssreflect" "mathcomp-ssreflect must be installed")
-EXTRA=(regexp.v)
-ARG="-w -notation-overridden,-local-declaration,-redundant-canonical-projection,-projection-no-head-constant"
-source coqproject.sh

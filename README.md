@@ -8,8 +8,8 @@ Requirements
 
 Definitions and proofs:
 
-- [`Coq 8.7`](https://coq.inria.fr/coq-87) or [`Coq 8.8`](https://coq.inria.fr/download)
-- [`Mathematical Components 1.6.4 or 1.7.0`](http://math-comp.github.io/math-comp/) (`ssreflect`)
+- [`Coq 8.7 or later`](https://coq.inria.fr/download)
+- [`Mathematical Components 1.7.0 or later`](http://math-comp.github.io/math-comp/) (`ssreflect`)
 - [`Ott 0.28`](https://github.com/ott-lang/ott) (and its Coq library)
 - [`RegLang`](https://github.com/chdoc/coq-reglang)
 
@@ -23,10 +23,12 @@ Executable matcher:
 Building
 --------
 
-Make sure the `ott` program is in the `PATH`, and Ott's Coq auxiliary library has been installed under Coq's `user-contrib` directory (default) or set the `Ott_PATH` environment variable to an alternative location. One easy way to install Ott and its Coq library is via [OPAM](http://opam.ocaml.org/doc/Install.html):
+Make sure the `ott` program is in the `PATH`, and Ott's Coq auxiliary library has been installed under Coq's `user-contrib` directory. Also make sure the RegLang Coq library has been installed.
+
+One easy way to install ssreflect, RegLang, as well as Ott and its Coq library is via [OPAM](http://opam.ocaml.org/doc/Install.html):
 ```
 opam repo add coq-released https://coq.inria.fr/opam/released
-opam install ott coq-ott
+opam install coq-mathcomp-ssreflect coq-reglang ott coq-ott
 ```
 
 Then, run `./configure`, followed by `make`. This will compile the Coq syntax and relation definitions along with the proofs and functions, and extract OCaml code.
