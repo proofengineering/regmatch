@@ -347,7 +347,7 @@ split.
   by left.
 Defined.
 
-Definition accept : forall (r : regexp char) (w : seq char), {w \in re_lang r}+{w \notin re_lang r}.
+Definition accept' : forall (r : regexp char) (w : seq char), {w \in re_lang r}+{w \notin re_lang r}.
 refine
   (fun r w => 
      match accept (@eq_comparable char) (regexp2re r, w) with
@@ -361,6 +361,15 @@ refine
   exact: regexp_in_re.
 Defined.
 
+Program Definition accept'' (r : regexp char) (w : seq char) : {w \in re_lang r}+{w \notin re_lang r} :=
+  match accept (@eq_comparable char) (regexp2re r, w) with
+  | left _ => left _
+  | right _ => right _
+  end.
+Next Obligation.
+exact: regexp_re_in'.
+Defined.
+  
 End RegLangExp.
 
 Section RegLangNFA.
