@@ -3,15 +3,18 @@ RegMatch
 
 An executable regular expression (regexp) matcher as defined in the paper [Proof-directed debugging revisited](https://www.cambridge.org/core/journals/journal-of-functional-programming/article/educational-pearl-proof-directed-debugging-revisited-for-a-first-order-version/F7CC0A759398A52C35F21F13236C0E00), proved correct in the Coq proof assistant.
 
+This project is used as a small motivating example of proof engineering in the paper [QED at Large: A Survey of Engineering of Formally Verified Software](https://www.nowpublishers.com/article/Details/PGL-045).
+
 Requirements
 ------------
 
 Definitions and proofs:
 
 - [`Coq 8.9 or later`](https://coq.inria.fr/download)
-- [`Mathematical Components 1.8.0 or later`](http://math-comp.github.io/math-comp/) (`ssreflect`)
-- [`Ott 0.29`](https://github.com/ott-lang/ott) (and its Coq library)
+- [`Mathematical Components 1.7.0 or later`](http://math-comp.github.io/math-comp/) (`ssreflect`)
+- [`Ott 0.29 or later`](https://github.com/ott-lang/ott) (and its Coq library)
 - [`RegLang`](https://github.com/chdoc/coq-reglang)
+- [`Equations`](https://github.com/mattam82/Coq-Equations)
 
 Executable matcher:
 
