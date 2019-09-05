@@ -17,6 +17,7 @@ depends: [
   "coq-ott" {>= "0.29"}
   "coq-mathcomp-ssreflect" {>= "1.7" & < "1.10~"}
   "coq-reglang" {>= "1"}
+  "coq-equations" {>= "1.2"}  
 ]
 
 tags: [
