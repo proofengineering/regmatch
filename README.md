@@ -1,7 +1,7 @@
-Regexp
-======
+RegMatch
+========
 
-A regexp matcher as defined in the paper [Proof-directed debugging revisited](https://www.cambridge.org/core/journals/journal-of-functional-programming/article/educational-pearl-proof-directed-debugging-revisited-for-a-first-order-version/F7CC0A759398A52C35F21F13236C0E00), proved correct in the Coq proof assistant.
+An executable regular expression (regexp) matcher as defined in the paper [Proof-directed debugging revisited](https://www.cambridge.org/core/journals/journal-of-functional-programming/article/educational-pearl-proof-directed-debugging-revisited-for-a-first-order-version/F7CC0A759398A52C35F21F13236C0E00), proved correct in the Coq proof assistant.
 
 Requirements
 ------------
