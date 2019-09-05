@@ -8,9 +8,9 @@ Requirements
 
 Definitions and proofs:
 
-- [`Coq 8.7 or later`](https://coq.inria.fr/download)
-- [`Mathematical Components 1.7.0 or later`](http://math-comp.github.io/math-comp/) (`ssreflect`)
-- [`Ott 0.28`](https://github.com/ott-lang/ott) (and its Coq library)
+- [`Coq 8.9 or later`](https://coq.inria.fr/download)
+- [`Mathematical Components 1.8.0 or later`](http://math-comp.github.io/math-comp/) (`ssreflect`)
+- [`Ott 0.29`](https://github.com/ott-lang/ott) (and its Coq library)
 - [`RegLang`](https://github.com/chdoc/coq-reglang)
 
 Executable matcher:
@@ -28,7 +28,9 @@ Make sure the `ott` program is in the `PATH`, and Ott's Coq auxiliary library ha
 One easy way to install ssreflect, RegLang, as well as Ott and its Coq library is via [OPAM](http://opam.ocaml.org/doc/Install.html):
 ```
 opam repo add coq-released https://coq.inria.fr/opam/released
-opam install coq-mathcomp-ssreflect coq-reglang ott coq-ott
+opam install ott coq-mathcomp-ssreflect coq-reglang coq-ott
 ```
 
-Then, run `./configure`, followed by `make`. This will compile the Coq syntax and relation definitions along with the proofs and functions, and extract OCaml code.
+Then, run `make`. This will compile the Coq syntax and relation definitions along with the proofs and functions, and extract OCaml code.
+
+To build the executable matcher program, run `make matcher`.

@@ -2,18 +2,18 @@ open Accept
 
 let rec string_of_regexp r =
 match r with
-| Re_zero -> "[zero]"
-| Re_unit -> "[unit]"
-| Re_char c -> Printf.sprintf "%c" c
-| Re_plus (r1, r2) ->
+| R_zero -> "[zero]"
+| R_unit -> "[unit]"
+| R_char c -> Printf.sprintf "%c" c
+| R_plus (r1, r2) ->
   let s1 = string_of_regexp r1 in
   let s2 = string_of_regexp r2 in
   Printf.sprintf "(%s|%s)" s1 s2
-| Re_times (r1, r2) ->
+| R_times (r1, r2) ->
   let s1 = string_of_regexp r1 in
   let s2 = string_of_regexp r2 in
   Printf.sprintf "(%s%s)" s1 s2
-| Re_star r ->
+| R_star r ->
   let s = string_of_regexp r in
   Printf.sprintf "(%s*)" s
 
@@ -31,7 +31,7 @@ let main () =
   try
     let re = Parser.main Lexer.token buf in
     (*Printf.printf "%s\n" (string_of_regexp re)*)
-    let mt = accept (=) (re, char_list_of_string s) in
+    let mt = acc (=) (re, char_list_of_string s) in
     Printf.printf "%b\n" mt
   with
   | Lexer.Error msg ->

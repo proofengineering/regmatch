@@ -23,7 +23,7 @@ s :: s_ ::=
   | s s' :: M :: concat
     {{ coq ([[s]] ++ [[s']]) }}
 
-re, r :: re_ ::=
+r :: r_ ::=
   {{ com regexp }}
   {{ coq-universe Type }}
   | 0 :: :: zero
@@ -91,10 +91,10 @@ embed
 
 End RegExp.
 
-Arguments re_zero [char].
-Arguments re_unit [char].
-Arguments re_char [char] _.
-Arguments re_plus [char] _ _.
-Arguments re_times [char] _ _.
-Arguments re_star [char] _.
+Arguments r_zero [char].
+Arguments r_unit [char].
+Arguments r_char [char] _.
+Arguments r_plus [char] _ _.
+Arguments r_times [char] _ _.
+Arguments r_star [char] _.
 }}

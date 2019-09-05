@@ -1,7 +1,6 @@
 Require Import List.
 
-Require Import RegExp.regexp.
-Require Import RegExp.regexp_metatheory.
+From RegMatch Require Import regexp regmatch.
 
 Require Import ExtrOcamlBasic.
 
@@ -12,4 +11,4 @@ Extract Inlined Constant app => "List.append".
 Extract Inlined Constant fold_left => "(fun a b c -> List.fold_left a c b)".
 Extract Inlined Constant map => "List.map".
 
-Extraction "accept.ml" accept.
+Extraction "accept.ml" acc.
