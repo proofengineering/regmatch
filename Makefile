@@ -3,6 +3,9 @@ OCAMLBUILD = ocamlbuild -use-menhir -tag safe_string -cflag -g
 default: Makefile.coq
 	+$(MAKE) -f Makefile.coq
 
+install: Makefile.coq
+	+$(MAKE) -f Makefile.coq install
+
 matcher: matcher.native
 
 matcher.native: accept.ml accept.mli matcher.ml parser.mly lexer.mll
