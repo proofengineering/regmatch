@@ -11,11 +11,11 @@ Section RegLangExp.
 
 Variable char : eqType.
 
-Lemma re_eq_dec (e1 e2 : r char) : {e1 = e2} + {e1 <> e2}.
+Lemma r_eq_dec (e1 e2 : r char) : {e1 = e2} + {e1 <> e2}.
 Proof. decide equality; apply: eq_comparable. Qed.
 
-Definition re_eqMixin := EqMixin (compareP re_eq_dec).
-Canonical Structure re_eqType := EqType _ re_eqMixin.
+Definition r_eqMixin := EqMixin (compareP r_eq_dec).
+Canonical Structure r_eqType := EqType _ r_eqMixin.
 
 Fixpoint regexp2r (re : regexp char) : r char :=
   match re with
@@ -35,14 +35,6 @@ Fixpoint r2regexp (r : r char) : regexp char :=
   | r_star r' => Star (r2regexp r')
   | r_plus r1 r2 => Plus (r2regexp r1) (r2regexp r2)
   | r_times r1 r2 => Conc (r2regexp r1) (r2regexp r2)
-  end.
-
-Fixpoint r_stars (e : regexp char) : nat :=
-  match e with
-  | Star s => (r_stars s).+1
-  | Plus s t => ((r_stars s)+(r_stars t)).+1
-  | Conc s t => ((r_stars s)+(r_stars t)).+1
-  | _ => 0
   end.
 
 Lemma cancel_r_regexp : cancel r2regexp regexp2r.
@@ -357,6 +349,6 @@ apply/negP.
 move => H_acc.
 case: H_r.
 exact: regexp_in_re.
-Defined.
+Qed.
   
 End RegLangExp.
