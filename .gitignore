@@ -8,15 +8,8 @@ Makefile.coq
 Makefile.coq.bak
 Makefile.coq.conf
 _build
-regexp.v
 accept.ml
 accept.mli
 matcher
 matcher.native
-regexp.log
-regexp.tex
-regexp.aux
-regexp.pdf
-parser.v
-parser.ml
-parser.mli
+.lia.cache

@@ -1,4 +1,4 @@
--Q . RegExp
+-Q . RegMatch
 
 -arg -w -arg -notation-overridden
 -arg -w -arg -local-declaration
@@ -6,6 +6,7 @@
 -arg -w -arg -projection-no-head-constant
 
 accept_extrocaml.v
-regexp_reglang.v
-regexp_metatheory.v
+regmatch_reglang.v
+regmatch.v
 regexp.v
+regmatch_nfa.v

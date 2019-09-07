@@ -1,7 +1,6 @@
 Require Import List.
 
-Require Import RegExp.regexp.
-Require Import RegExp.regexp_metatheory.
+Require Import RegMatch.regmatch.
 
 Require Import ExtrOcamlBasic.
 
