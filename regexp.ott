@@ -48,32 +48,32 @@ defn
  s in L ( r ) :: :: s_in_regexp_lang :: s_in_regexp_lang_
  {{ com string in regexp language }} by
 
- ------------ :: unit
- e in L ( 1 )
+ --------- :: unit
+ e in L(1)
 
- ------------ :: char
- c in L ( c )
+ ---------- :: char
+ c in L(c)
 
- s in L ( r1 )
- ------------------ :: plus_1
- s in L ( r1 + r2 )
+ s in L(r1)
+ ------------- :: plus_1
+ s in L(r1+r2)
 
- s in L ( r2 )
- ------------------ :: plus_2
- s in L ( r1 + r2 )
+ s in L(r2)
+ ------------- :: plus_2
+ s in L(r1+r2)
 
- s in L ( r1 )
- s' in L ( r2 )
- ------------------- :: times
- s s' in L ( r1 r2 )
+ s in L(r1)
+ s' in L(r2)
+ ---------------- :: times
+ s s' in L(r1 r2)
 
- -------------- :: star_1
- e in L ( r * )
+ ---------- :: star_1
+ e in L(r*)
 
- s in L ( r )
- s' in L ( r * )
- ----------------- :: star_2
- s s' in L ( r * )
+ s in L(r)
+ s' in L(r*)
+ ------------- :: star_2
+ s s' in L(r*)
 
 defns
   regexp_ins_c :: '' ::=
@@ -82,9 +82,9 @@ defn
  s in L ( r ; c ) :: :: s_in_regexp_c_lang :: s_in_regexp_c_lang_
  {{ com string in regexp c language }} by 
 
- c s in L ( r )
- ----------------- :: cs
- s in L ( r ; c )
+ c s in L(r)
+ ----------- :: cs
+ s in L(r;c)
 
 embed
 {{ coq
