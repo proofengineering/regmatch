@@ -1,3 +1,8 @@
+.HOLMK
+.hollogs
+*.uo
+*.ui
+*.dat
 *.aux
 *.vo
 *.d
@@ -14,3 +19,8 @@ accept.mli
 matcher
 matcher.native
 .lia.cache
+ottTheory.sig
+ottTheory.sml
+regexpScript.sml
+regexpTheory.sig
+regexpTheory.sml

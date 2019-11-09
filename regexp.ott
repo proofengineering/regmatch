@@ -11,18 +11,23 @@ metavar c ::=
           {{ com character }}
           {{ coq char }}
           {{ coq-universe Type }}
+          {{ hol char }}
 grammar
 s :: s_ ::=
   {{ com string }}
   {{ coq list char }}
   {{ coq-universe Type }}
+  {{ hol char list }}
   | e :: M :: empty
     {{ coq [] }}
     {{ tex \epsilon }}
+    {{ hol [] }}
   | c :: M :: char
     {{ coq ([[c]] :: []) }}
+    {{ hol ([[c]] :: []) }}
   | s s' :: M :: concat
     {{ coq ([[s]] ++ [[s']]) }}
+    {{ hol ([[s]] ++ [[s']]) }}
 
 r :: r_ ::=
   {{ com regexp }}
