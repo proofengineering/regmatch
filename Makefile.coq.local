@@ -3,7 +3,6 @@ accept.ml accept.mli: accept_extrocaml.v regmatch.vo
 
 regexp.v: regexp.ott
 	ott -o $@ -coq_expand_list_types false $<
-	@sed -i 's/Definition\ c/Definition\ c\ \:\ Type/g' $@
 
 clean::
 	rm -f accept.ml accept.mli regexp.v

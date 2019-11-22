@@ -43,4 +43,4 @@ matrix:
     - COQ_IMAGE=coqorg/coq:8.9
     - CONTRIB_NAME=matcher
     - NJOBS=2
-    <<: *OPAM    
+    <<: *OPAM

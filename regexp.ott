@@ -10,6 +10,7 @@ metavar c ::=
           {{ lex alphanum }}
           {{ com character }}
           {{ coq char }}
+          {{ coq-universe Type }}
 grammar
 s :: s_ ::=
   {{ com string }}
@@ -91,8 +92,8 @@ embed
 
 End RegExp.
 
-Arguments r_zero [char].
-Arguments r_unit [char].
+Arguments r_zero {char}.
+Arguments r_unit {char}.
 Arguments r_char [char] _.
 Arguments r_plus [char] _ _.
 Arguments r_times [char] _ _.
