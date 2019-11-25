@@ -35,12 +35,12 @@ matrix:
 
   # Test supported versions of Coq via OPAM
   - env:
-    - COQ_IMAGE=coqorg/coq:8.9
+    - COQ_IMAGE=coqorg/coq:8.10
     - CONTRIB_NAME=coq-regmatch
     - NJOBS=2
     <<: *OPAM
   - env:
-    - COQ_IMAGE=coqorg/coq:8.9
+    - COQ_IMAGE=coqorg/coq:8.10
     - CONTRIB_NAME=matcher
     - NJOBS=2
     <<: *OPAM
