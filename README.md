@@ -11,8 +11,8 @@ Requirements
 Definitions and proofs:
 
 - [`Coq 8.9 or later`](https://coq.inria.fr/download)
-- [`Mathematical Components 1.7.0 or later`](http://math-comp.github.io/math-comp/) (`ssreflect`)
-- [`Ott 0.29 or later`](https://github.com/ott-lang/ott) (and its Coq library)
+- [`Mathematical Components 1.9.0 or later`](http://math-comp.github.io/math-comp/) (`ssreflect`)
+- [`Ott 0.30 or later`](https://github.com/ott-lang/ott) (and its Coq library)
 - [`RegLang`](https://github.com/chdoc/coq-reglang)
 - [`Equations`](https://github.com/mattam82/Coq-Equations)
 
@@ -26,7 +26,7 @@ Executable matcher:
 Building
 --------
 
-Make sure the `ott` program is in the `PATH`, and Ott's Coq auxiliary library has been installed under Coq's `user-contrib` directory. Also make sure the RegLang Coq library has been installed.
+Make sure the `ott` program is in the `PATH`, and Ott's Coq auxiliary library has been installed under Coq's `user-contrib` directory. Also make sure the RegLang and ssreflect Coq libraries have been installed.
 
 One easy way to install ssreflect, RegLang, Equations, menhir, and Ott and its Coq library is via [OPAM](http://opam.ocaml.org/doc/Install.html):
 ```
