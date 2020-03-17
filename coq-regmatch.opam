@@ -1,6 +1,6 @@
 opam-version: "2.0"
-version: "dev"
 maintainer: "palmskog@gmail.com"
+version: "dev"
 
 homepage: "https://github.com/proofengineering/regmatch"
 dev-repo: "git+https://github.com/proofengineering/regmatch.git"
@@ -12,12 +12,12 @@ build: [make "-j%{jobs}%"]
 install: [make "install"]
 depends: [
   "ocaml"
-  "coq" {>= "8.9" & < "8.11~"}
+  "coq" {>= "8.9" & < "8.12~"}
   "ott" {build & >= "0.30"}
   "coq-ott" {>= "0.30"}
-  "coq-mathcomp-ssreflect" {>= "1.9" & < "1.10~"}
+  "coq-mathcomp-ssreflect" {>= "1.9" & < "1.11~"}
   "coq-reglang" {>= "1.1"}
-  "coq-equations" {>= "1.2"}  
+  "coq-equations" {>= "1.2"}
 ]
 
 tags: [
