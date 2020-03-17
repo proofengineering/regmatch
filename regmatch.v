@@ -219,33 +219,6 @@ Defined.
 Definition regexps_no_c_t (rc : r char * char) : Type :=
 { l : list (r char) | (forall r : r char, In r l -> (forall s, s_in_regexp_lang char s r -> s_in_regexp_c_lang char s (fst rc) (snd rc))) /\ (forall s, s_in_regexp_c_lang char s (fst rc) (snd rc) -> exists r, In r l /\ s_in_regexp_lang char s r) }.
 
-Lemma star_times : 
-  forall (s' : list char) c r',
-  s_in_regexp_lang _ (c :: s') (r_star r') ->
-  s_in_regexp_lang _ (c :: s') (r_times r' (r_star r')).
-Proof.
-case => //=.
-- move => c r' H_s.
-  inversion H_s; subst.
-  destruct s5.
-    simpl in *.
-    have ->: s' = [] ++ s' by [].
-    by apply s_in_regexp_lang_times.
-  injection H => H_eq H_eq_c; subst.
-  destruct s5 => //=.
-  have ->: c :: s' = [c] ++ s' by [].
-  by apply s_in_regexp_lang_times.
-- move => c s' c' r' H_r'.
-  inversion H_r'; subst.
-  destruct s5.
-  * simpl in *.
-    have ->: s'0 = [] ++ s'0 by [].
-    by apply s_in_regexp_lang_times.
-  * injection H => H_eq H_eq_c.
-    subst.
-    by apply s_in_regexp_lang_times.
-Qed.
-
 Lemma regexp_star_split : forall r' s' c,
   s_in_regexp_lang char (c :: s') (r_star r') ->
   exists s1 s2, s' = s1 ++ s2 /\ s_in_regexp_lang char (c :: s1) r' /\ s_in_regexp_lang char s2 (r_star r').
@@ -260,6 +233,17 @@ Proof.
   - apply IHs_in_regexp_lang2; auto.
   - simpl in *. inversion Heqs0; subst; clear Heqs0.
     eauto.
+Qed.
+
+Lemma star_times :
+  forall (s' : list char) c r',
+  s_in_regexp_lang _ (c :: s') (r_star r') ->
+  s_in_regexp_lang _ (c :: s') (r_times r' (r_star r')).
+Proof.
+move => s' c r' /regexp_star_split [s1 [s2 [H_s [H_s' H_s'']]]].
+subst.
+have ->: c :: s1 ++ s2 = (c :: s1) ++ s2 by [].
+by apply s_in_regexp_lang_times.
 Qed.
 
 Inductive accept_lt : r char * list char -> r char * list char -> Prop :=
